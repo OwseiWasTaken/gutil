@@ -122,7 +122,7 @@ def CompFile(file: list[str], RetImport = True) -> list[str]:
 					)
 					imports = set([*imports, *_])
 			else:
-				fprintf(stderr, "No Such File \"{s}\"", includename)
+				fprintf(stderr, "No Such File \"{s}\"\n", includename)
 			if FL:
 				FILE+=FL[1:]
 		else:
