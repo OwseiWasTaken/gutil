@@ -1,10 +1,24 @@
-#! /usr/bin/python3.9
+#! /usr/bin/python3.10
 #imports
 from util import *
 
+paths = {}
 
 #main
 def Main() -> int:
+	global paths
+
+	fl = argv[0]
+	if fl.endswith('.py'):
+		fl = fl[:-3]
+	configs = fl+'.xmp'
+	if not exists(configs):
+		UseXmp(configs, {
+			"paths":{},
+	})
+
+	paths = UseXmp(configs)["paths"]
+
 	filename = get(None).first
 	run = False
 	if filename == "/r":
@@ -65,6 +79,8 @@ def Main() -> int:
 	return 0
 
 def CompFile(file: list[str], RetImport = True) -> list[str]:
+	global paths
+
 	FILE = []
 	imporing = False
 	imports = set([])
@@ -79,20 +95,22 @@ def CompFile(file: list[str], RetImport = True) -> list[str]:
 		elif line[:6] == "import":
 			imporing = True
 		elif line[:7] == "include":
-			includename = line[8:]
-			includename =  includename[1:-1]
-			if not includename.endswith('.go'):
-				includename+=".go"
+			includename = line[9:][:-1]
+			if includename in paths.keys():
+				includename = paths[includename]
+			else:
+				if not includename.endswith('.go'):
+					includename+=".go"
 
-			if not exists(includename):
-				if exists("../"+includename):
-					includename = "../"+includename
-				else:
-					if includename == "gutil.go":
-						if exists("gutil/"+includename):
-							includename = "gutil/"+includename
+				if not exists(includename):
+					if exists("../"+includename):
+						includename = "../"+includename
 					else:
-						fprintf(stderr, "can't find included file {s}\n", includename)
+						if includename == "gutil.go":
+							if exists("gutil/"+includename):
+								includename = "gutil/"+includename
+						else:
+							fprintf(stderr, "can't find included file {s}\n", includename)
 			FL = []
 			if exists(includename):
 				with open(includename, 'r') as f:
