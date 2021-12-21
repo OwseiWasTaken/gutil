@@ -1,0 +1,378 @@
+package gutil
+
+import (
+	"fmt"
+	"os"
+	"log"
+	"io/ioutil"
+	"reflect"
+	"bytes"
+	"os/exec"
+	"math/rand"
+	"time"
+	"strconv"
+	"strings"
+	"bufio"
+	"runtime"
+)
+
+func argvAssing( argv[] string ) map[string][]string {
+	var argc int = len(argv)
+	var dict map[string][]string = map[string][]string {}
+	var now string = ""
+	var i int
+	for i = 1; i < argc; i++ {
+		if argv[i][0] == '-' {
+			now = argv[i]
+			dict[now] = append(dict[now], "")
+		} else {
+			dict[now] = append(dict[now], argv[i])
+		}
+	}
+	return dict
+}
+
+type _s_get struct {
+	Exists bool
+	First string
+	Last string
+	List []string
+}
+
+func get( gts string ) _s_get {
+	_list, _exists := args[gts]
+	var _ll int = len(_list)
+	var _first string = ""
+	var _last string = ""
+	_ = _last
+	_ = _first
+	if _ll > 1 {
+		var _first string = _list[0]
+		var _last string = _list[_ll-1]
+		_ = _last
+		_ = _first
+	}
+	return _s_get{
+		Exists: _exists,
+		First: _first,
+		Last: _last,
+		List: _list,
+	}
+}
+
+var stringType reflect.Type = typeof("")
+var intType reflect.Type = typeof(2)
+var boolType reflect.Type = typeof(true)
+var floatType reflect.Type = typeof(0.1)
+var funcType reflect.Type = typeof(func(){})
+func Repr( v interface{} ) string {
+	var vtype reflect.Type = typeof(v)
+	var types map[reflect.Type]string = map[reflect.Type]string {}
+	types[stringType] = "S["
+	types[intType] = "I["
+	types[boolType] = "B["
+	types[floatType] = "F["
+	types[funcType] = "f["
+	return fmt.Sprintf("%s%v%s", types[vtype], v, "]")
+}
+
+func typeof( v interface{} ) reflect.Type {
+	return reflect.TypeOf(v)
+}
+
+func ReadFile( filename string ) string {
+	file, err := os.Open(filename) // For read access.
+	if err != nil {
+		log.Fatal(err)
+	}
+	_ = err
+	FILE, err := ioutil.ReadAll(file)
+	var FILES bytes.Buffer
+	FILES.Write(FILE)
+
+	return string(FILES.Bytes())
+}
+
+func ReadFileBytes( filename string ) []byte {
+	file, err := os.Open(filename) // For read access.
+	if err != nil {
+		log.Fatal(err)
+	}
+	_ = err
+	FILE, err := ioutil.ReadAll(file)
+	var FILES bytes.Buffer
+	FILES.Write(FILE)
+
+	return (FILES.Bytes())
+}
+
+func WriteFile( filename string, write string) {
+	err := os.WriteFile(filename, []byte(write), 0644) // 1X 2W 4R
+	if err != nil{
+		log.Fatal(err)
+	}
+}
+
+func InitGetCh(){
+	exec.Command("stty", "-F", "/dev/tty","-echo", "cbreak", "min", "1").Run()
+}
+
+func GetCh() string {
+	var b []byte = make([]byte, 1)
+	os.Stdin.Read(b)
+	return string(b)
+}
+
+func GetChByte() byte{
+	var b []byte = make([]byte, 1)
+	os.Stdin.Read(b)
+	return b[0]
+}
+
+func getChBytes() []byte{
+	var b []byte = make([]byte, 5)
+	os.Stdin.Read(b)
+	return b
+}
+
+func spos(y int, x int) string {
+	return fmt.Sprintf("\x1b[%d;%dH", y+1, x+1)
+}
+
+func pos(y int, x int) {
+	fmt.Printf("\x1b[%d;%dH", y+1, x+1)
+}
+
+func printat(y int, x int, prt interface{}) {
+	fmt.Printf("%s%v",spos(y,x),prt)
+}
+
+func SeedRand(seed int64){
+	rand.Seed(seed)
+}
+
+func InitRand() {
+	SeedRand(time.Now().UTC().UnixNano())
+}
+
+func rint(min int , max int) int {
+	return rand.Intn(max-(min-1))+min
+}
+
+func rbool() bool {
+	return rand.Intn(2)==1
+}
+
+func rboolin(in int) bool {
+	return rand.Intn(in+1)==1
+}
+
+func input() string {
+	var b = ""
+	var i = []byte{0}
+	for{
+		os.Stdin.Read(i)
+		i[0]++
+		if i[0] == 11{break}
+		b+=string(i[0]-1)
+		i = []byte{0}
+	}
+	return b
+}
+
+func hideCursor(){
+	fmt.Print("\x1b[?25l")
+}
+
+func showCursor(){
+	fmt.Print("\x1b[?25h")
+}
+
+func cursorMode(mode string){
+	var CursorModes map[string]int = map[string]int{
+		"blinking block":1,
+		"block":2,
+		"blinking underline":3,
+		"underline":4,
+		"blinking I-beam":5,
+		"I-beam":6,
+	}
+	fmt.Print("\033[%dq", CursorModes[mode])
+}
+
+func getTerminalSize() (int, int) {
+	cmd := exec.Command("stty", "size")
+	cmd.Stdin = os.Stdin
+	out, _ := cmd.Output()
+	out = out[:len(out)-1]
+	var ys string
+	var xs string
+	var spaced bool = false
+	var x int
+	var y int
+	for  i := 0; i < len(out); i++ {
+		if out[i] == byte(32){ // space
+			spaced = true
+		} else if spaced {
+			xs+=string(out[i])
+		} else {
+			ys+=string(out[i])
+		}
+	}
+	x, _ = (strconv.Atoi(xs))
+	y, _ = (strconv.Atoi(ys))
+	return y, x
+}
+
+func insert(a []byte, index int, value byte) []byte {
+	if len(a) == index {
+		return append(a, value)
+	}
+	a = append(a[:index+1], a[index:]...)
+	a[index] = value
+	return a
+}
+
+func insert2(a []interface{}, index int, value interface{}) []interface{} {
+	if len(a) == index {
+		return append(a, value)
+	}
+	a = append(a[:index+1], a[index:]...)
+	a[index] = value
+	return a
+}
+
+// TODO
+// make this into vars
+func join(list []string, sep string) string {
+	return strings.Join(list,sep)
+}
+
+func split(str string, sep string) []string {
+	return strings.Split(str,sep)
+}
+
+func pop(arr []byte, index int) []byte {
+	return append(arr[:index], arr[index+1:]...)
+}
+
+func sleep(tm float64){
+	var slp = time.Duration(1000000000.0*tm)
+	time.Sleep(slp)
+}
+
+func lockLink( link chan bool ) {
+	for {if <-link{break} else {sleep(0.005)}}
+}
+
+func reverseString( str string ) string {
+	var now = make([]string, len(str))
+	var ret = make([]string, len(str))
+	for i:=0 ; i < len(str) ; i ++ {
+		now[i] = string(str[i])
+	}
+	var j int = 0
+	for i:=(len(now)-1) ; i >= 0; i -- {
+		ret[i] = now[j]
+		j++
+	}
+	return join(ret, "")
+}
+
+
+
+var _clear map[string]func() //create a map for storing clear funcs
+
+func init() {
+	_clear = make(map[string]func()) //Initialize it
+	_clear["linux"] = func() {
+		cmd := exec.Command("clear") //Linux example, its tested
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	}
+	_clear["windows"] = func() {
+		cmd := exec.Command("cmd", "/c", "cls") //Windows example, its tested
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	}
+}
+
+func clear() {
+	value, ok := _clear[runtime.GOOS]
+	if ok {
+		value()
+	} else {
+		printf("Your platform [%s] is unsupported! I can't clear terminal screen :(", runtime.GOOS)
+		exit(1)
+	}
+}
+
+func exit( ecode int ) {
+	stdout.Flush()
+	stderr.Flush()
+	os.Exit(ecode)
+}
+
+func Print( thing interface{} ) {
+	printf("%v\n", thing)
+}
+
+func StoIA( str string ) []int {
+	values := make([]int, 0, len(str))
+	for _, raw := range str {
+		v, err := strconv.Atoi(string(raw))
+		if err != nil {
+			log.Print(err)
+			continue
+		}
+		values = append(values, v)
+	}
+	return values
+}
+
+func RGB( r, g, b int ) string {
+	return fmt.Sprintf("\x1b[38;2;%d;%d;%dm", r, g, b )
+}
+
+var COLOR = map[string]string{
+	"nc" : RGB(0xff, 0xff, 0xff),
+	"red" : RGB(0xff, 0x0, 0x0),
+	"green" : RGB(0x0, 0xff, 0x0),
+	"blue" : RGB(0x0, 0x0, 0xff),
+	"cyan" : RGB(0x80, 0x80, 0xff),
+	"yellow" : RGB(0xff, 0xff, 0x0),
+}
+
+func bog(ifer bool, f1, f2 interface{}) interface{} {
+	if (ifer) {
+		return f1
+	} else {
+		return f2
+	}
+}
+
+func IinA(a interface{}, arr []interface{}) bool {
+	for _, b := range arr {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
+
+
+//dodef
+var stdout *bufio.Writer = bufio.NewWriter(os.Stdout)
+var stderr *bufio.Writer = bufio.NewWriter(os.Stderr)
+var args map[string][]string = argvAssing(os.Args)
+var argv = os.Args[1:]
+var argc = len(os.Args)-1
+var format = fmt.Sprintf
+var printf = fmt.Printf
+var fprintf = fmt.Fprintf
+var fopen = os.Open
+
+//typedef
+type FILE = *os.File
+type reader = *bufio.Reader
+type writer = *bufio.Writer
