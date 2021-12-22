@@ -9,15 +9,14 @@ def Main() -> int:
 	global paths
 
 	fl = argv[0]
-	if fl.endswith('.py'):
-		fl = fl[:-3]
-	configs = fl+'.xmp'
-	if not exists(configs):
-		UseXmp(configs, {
+	confile = '/'.join(fl.split('/')[:-1])+'/config.xmp'
+
+	if not exists(confile):
+		UseXmp(confile, {
 			"paths":{},
 	})
 
-	paths = UseXmp(configs)["paths"]
+	paths = UseXmp(confile)["paths"]
 
 	filename = get(None).first
 	run = False
