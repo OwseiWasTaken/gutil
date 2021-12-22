@@ -224,38 +224,6 @@ func getTerminalSize() (int, int) {
 	return y, x
 }
 
-func insert(a []byte, index int, value byte) []byte {
-	if len(a) == index {
-		return append(a, value)
-	}
-	a = append(a[:index+1], a[index:]...)
-	a[index] = value
-	return a
-}
-
-func insert2(a []interface{}, index int, value interface{}) []interface{} {
-	if len(a) == index {
-		return append(a, value)
-	}
-	a = append(a[:index+1], a[index:]...)
-	a[index] = value
-	return a
-}
-
-// TODO
-// make this into vars
-func join(list []string, sep string) string {
-	return strings.Join(list,sep)
-}
-
-func split(str string, sep string) []string {
-	return strings.Split(str,sep)
-}
-
-func pop(arr []byte, index int) []byte {
-	return append(arr[:index], arr[index+1:]...)
-}
-
 func sleep(tm float64){
 	var slp = time.Duration(1000000000.0*tm)
 	time.Sleep(slp)
@@ -278,8 +246,6 @@ func reverseString( str string ) string {
 	}
 	return join(ret, "")
 }
-
-
 
 var _clear map[string]func() //create a map for storing clear funcs
 
@@ -360,7 +326,6 @@ func IinA(a interface{}, arr []interface{}) bool {
 	return false
 }
 
-
 //dodef
 var stdout *bufio.Writer = bufio.NewWriter(os.Stdout)
 var stderr *bufio.Writer = bufio.NewWriter(os.Stderr)
@@ -370,6 +335,8 @@ var argc = len(os.Args)-1
 var format = fmt.Sprintf
 var printf = fmt.Printf
 var fprintf = fmt.Fprintf
+var join = strings.Join
+var split = strings.Split
 var fopen = os.Open
 
 //typedef
