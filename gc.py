@@ -1,6 +1,10 @@
 #! /usr/bin/python3.10
 #imports
 from util import *
+# TODO
+# include problem
+# if a program is included more than once, every thing will break
+# do smh alike the import stuff
 
 paths = {}
 
