@@ -326,6 +326,14 @@ func IinA(a interface{}, arr []interface{}) bool {
 	return false
 }
 
+func MakeArray(size int, value interface{}) []interface{} {
+	var array = make([]interface{}, size)
+	for i := range array {
+		array[i] = value
+	}
+	return array
+}
+
 //dodef
 var stdout *bufio.Writer = bufio.NewWriter(os.Stdout)
 var stderr *bufio.Writer = bufio.NewWriter(os.Stderr)
