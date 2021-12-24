@@ -1,10 +1,6 @@
 #! /usr/bin/python3.10
 #imports
 from util import *
-# TODO
-# include problem
-# if a program is included more than once, every thing will break
-# do smh alike the import stuff
 
 paths = {}
 
@@ -48,13 +44,14 @@ def Main() -> int:
 
 	programname = '.'.join(filename.split('.')[:-1])
 	with open(filename, 'r') as f:
-		newfile = CompFile(
+		file, imports, includes, pack = CompFile(
 			list(map(
 				lambda x: x.replace('\n', '').strip(),
 				f.readlines()
 			)),
-			False
+			True
 		)
+	newfile = MakeFile(file, imports, includes, pack)
 	mvflname = filename
 	if '/' in filename:
 		cname = filename.split('/')
@@ -81,12 +78,13 @@ def Main() -> int:
 				ss(f"rm {cname}")
 	return 0
 
-def CompFile(file: list[str], RetImport = True) -> list[str]:
+def CompFile(file: list[str], RetPack = True) -> list[str]:
 	global paths
 
 	FILE = []
 	imporing = False
 	imports = set([])
+	includes = {}
 	pack = ""
 	for line in file:
 		if line[:7] == "package":
@@ -114,27 +112,36 @@ def CompFile(file: list[str], RetImport = True) -> list[str]:
 								includename = "gutil/"+includename
 						else:
 							fprintf(stderr, "can't find included file {s}\n", includename)
-			FL = []
 			if exists(includename):
+				#FL = []
 				with open(includename, 'r') as f:
-					FL, _ = CompFile(
+					FL, _imports, _includes = CompFile(
 						list(map(
 							lambda x: x.replace('\n', '').strip(),
 							f.readlines()
-						))
+						)), False
 					)
-					imports = set([*imports, *_])
+					imports = set([*imports, *_imports])
+					includes[includename] = FL
+					includes = includes | _includes
+				#FILE+=FL[1:]
 			else:
 				fprintf(stderr, "No Such File \"{s}\"\n", includename)
-			if FL:
-				FILE+=FL[1:]
 		else:
 			FILE.append(line)
-	if RetImport:
-		return FILE, imports
+	if RetPack:
+		return FILE, imports, includes, pack
 	else:
-		FILE=[pack, "import ("]+[x for x in list(imports)]+[")"]+FILE
-		return FILE
+		return FILE, imports, includes
+
+def MakeFile(file, imports, includes, pack):
+	FL = []
+	for n, fl in includes.items():
+		FL.append("// include %s"%n)
+		FL = FL+fl
+	file = FL+file
+	file=[pack, "import ("]+[x for x in list(imports)]+[")"]+file
+	return file
 
 #start
 if __name__ == '__main__':
