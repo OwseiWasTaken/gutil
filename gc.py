@@ -93,7 +93,7 @@ def CompFile(file: list[str], RetPack = True) -> list[str]:
 			imporing = False
 		elif imporing:
 			imports.add(line)
-		elif line[:6] == "import":
+		elif line[:6] == "import" and line[7] == '(':
 			imporing = True
 		elif line[:7] == "include":
 			includename = line[9:][:-1]
