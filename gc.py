@@ -1,6 +1,11 @@
 #! /usr/bin/python3.10
 #imports
 from util import *
+# TODO
+# store already compiled files in /tmp and hash them
+# compare compiling files to the already compiled ones
+# how? idk
+# why? speed prolly
 
 paths = {}
 
@@ -18,16 +23,31 @@ def Main() -> int:
 
 	paths = UseXmp(confile)["paths"]
 
-	filename = get(None).first
-	run = False
-	if filename == "/r":
-		filename = get(None).last
-		run = True
-	if get('-r').exists:
-		run = True
+	argvs = get("").list
+
+	files = []
+	config = {
+		"r":False,#run
+		# other flags here
+	}
 	BuildArgs = []
 	if get('-ba').exists:
 		BuildArgs = get('-ba').list
+
+	for arg in argvs:
+		if arg[0] == '/' and arg[-1] == '/':
+			config[arg[1]] = True
+		else:
+			files.append(arg)
+
+	for file in files:
+		if ecode:=DoFileMain(file, config, BuildArgs):
+			return ecode
+	return 0
+
+def DoFileMain(filename, config, BuildArgs) -> int:
+	#filename = get(None).first
+	run = config['r']
 
 	# usable input chek
 	if not filename:
