@@ -14,6 +14,7 @@ import (
 	"strings"
 	"bufio"
 	"runtime"
+	"errors"
 )
 
 func argvAssing( argv[] string ) map[string][]string {
@@ -332,6 +333,11 @@ func MakeArray(size int, value interface{}) []interface{} {
 		array[i] = value
 	}
 	return array
+}
+
+func exists( filename string ) bool {
+	_, err := os.Stat(filename)
+	return !errors.Is(err, os.ErrNotExist)
 }
 
 //dodef
