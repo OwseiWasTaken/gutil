@@ -230,7 +230,7 @@ func sleep(tm float64){
 	time.Sleep(slp)
 }
 
-func lockLink( link chan bool ) {
+func LockLink( link chan bool ) {
 	for {if <-link{break} else {sleep(0.005)}}
 }
 
@@ -340,20 +340,61 @@ func exists( filename string ) bool {
 	return !errors.Is(err, os.ErrNotExist)
 }
 
+/*
+//TODO
+func TryReadChan(ch chan interface{}) interface{}, error {
+	select {
+		case x, ok := <-ch:
+			if ok {
+				fmt.Printf("Value %d was read.\n", x)
+			} else {
+				fmt.Println("Channel closed!")
+			}
+		default:
+			fmt.Println("No value ready, moving on.")
+		}
+}
+*/
+
 //dodef
-var stdout *bufio.Writer = bufio.NewWriter(os.Stdout)
-var stderr *bufio.Writer = bufio.NewWriter(os.Stderr)
-var args map[string][]string = argvAssing(os.Args)
-var argv = os.Args[1:]
-var argc = len(os.Args)-1
-var format = fmt.Sprintf
-var printf = fmt.Printf
-var sprintf = fmt.Sprintf
-var fs = fmt.Sprintf
-var fprintf = fmt.Fprintf
-var join = strings.Join
-var split = strings.Split
-var fopen = os.Open
+var (
+	stdout *bufio.Writer = bufio.NewWriter(os.Stdout)
+	stderr *bufio.Writer = bufio.NewWriter(os.Stderr)
+	args map[string][]string = argvAssing(os.Args)
+	argv = os.Args[1:]
+	argc = len(os.Args)-1
+	format = fmt.Sprintf
+	printf = fmt.Printf
+	sprintf = fmt.Sprintf
+	fs = fmt.Sprintf
+	fprintf = fmt.Fprintf
+	join = strings.Join
+	split = strings.Split
+	fopen = os.OpenFile
+	fcreate = os.Create
+	fclose = os.Close
+)
+
+//const def
+const (
+	// nums
+	INT8MAX = int8(0x7f)
+	INT8MIN = int8(0)
+
+	INT16MAX = int16(0x7FFF)
+	INT16MIN = int16(0)
+
+	INT32MAX = int32(0x7FFFFFFF)
+	INT32MIN = int32(0)
+
+	INT64MAX = int64(0x7FFFFFFFFFFFFFFF)
+	INT64MIN = int64(0)
+
+	//
+	F_append = os.O_APPEND
+	F_WR = os.O_WRONLY
+)
+
 
 //typedef
 type FILE = *os.File
