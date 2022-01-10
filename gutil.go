@@ -17,7 +17,7 @@ import (
 	"errors"
 )
 
-func argvAssing( argv[] string ) map[string][]string {
+func argvAssing( argv[] string ) (map[string][]string) {
 	var argc int = len(argv)
 	var dict map[string][]string = map[string][]string {}
 	var now string = ""
@@ -40,7 +40,7 @@ type _s_get struct {
 	List []string
 }
 
-func get( gts string ) _s_get {
+func get( gts string ) (_s_get) {
 	_list, _exists := args[gts]
 	var _ll int = len(_list)
 	var _first string = ""
@@ -65,8 +65,8 @@ var stringType reflect.Type = typeof("")
 var intType reflect.Type = typeof(2)
 var boolType reflect.Type = typeof(true)
 var floatType reflect.Type = typeof(0.1)
-var funcType reflect.Type = typeof(func(){})
-func Repr( v interface{} ) string {
+var funcType reflect.Type = typeof(func() {})
+func Repr( v interface{} ) (string) {
 	var vtype reflect.Type = typeof(v)
 	var types map[reflect.Type]string = map[reflect.Type]string {}
 	types[stringType] = "S["
@@ -77,11 +77,11 @@ func Repr( v interface{} ) string {
 	return fmt.Sprintf("%s%v%s", types[vtype], v, "]")
 }
 
-func typeof( v interface{} ) reflect.Type {
+func typeof( v interface{} ) (reflect.Type) {
 	return reflect.TypeOf(v)
 }
 
-func ReadFile( filename string ) string {
+func ReadFile( filename string ) (string) {
 	file, err := os.Open(filename) // For read access.
 	if err != nil {
 		log.Fatal(err)
@@ -94,7 +94,7 @@ func ReadFile( filename string ) string {
 	return string(FILES.Bytes())
 }
 
-func ReadFileBytes( filename string ) []byte {
+func ReadFileBytes( filename string ) ([]byte) {
 	file, err := os.Open(filename) // For read access.
 	if err != nil {
 		log.Fatal(err)
@@ -114,29 +114,29 @@ func WriteFile( filename string, write string) {
 	}
 }
 
-func InitGetCh(){
+func InitGetCh() {
 	exec.Command("stty", "-F", "/dev/tty","-echo", "cbreak", "min", "1").Run()
 }
 
-func GetCh() string {
+func GetCh() (string) {
 	var b []byte = make([]byte, 1)
 	os.Stdin.Read(b)
 	return string(b)
 }
 
-func GetChByte() byte{
+func GetChByte() (byte) {
 	var b []byte = make([]byte, 1)
 	os.Stdin.Read(b)
 	return b[0]
 }
 
-func getChBytes() []byte{
+func getChBytes() ([]byte) {
 	var b []byte = make([]byte, 5)
 	os.Stdin.Read(b)
 	return b
 }
 
-func spos(y int, x int) string {
+func spos(y int, x int) (string) {
 	return fmt.Sprintf("\x1b[%d;%dH", y+1, x+1)
 }
 
@@ -148,7 +148,7 @@ func printat(y int, x int, prt interface{}) {
 	fmt.Printf("%s%v",spos(y,x),prt)
 }
 
-func SeedRand(seed int64){
+func SeedRand(seed int64) {
 	rand.Seed(seed)
 }
 
@@ -156,19 +156,19 @@ func InitRand() {
 	SeedRand(time.Now().UTC().UnixNano())
 }
 
-func rint(min int , max int) int {
+func rint(min int , max int) (int) {
 	return rand.Intn(max-(min-1))+min
 }
 
-func rbool() bool {
+func rbool() (bool) {
 	return rand.Intn(2)==1
 }
 
-func rboolin(in int) bool {
+func rboolin(in int) (bool) {
 	return rand.Intn(in+1)==1
 }
 
-func input() string {
+func input() (string) {
 	var b = ""
 	var i = []byte{0}
 	for{
@@ -181,15 +181,15 @@ func input() string {
 	return b
 }
 
-func hideCursor(){
+func hideCursor() {
 	fmt.Print("\x1b[?25l")
 }
 
-func showCursor(){
+func showCursor() {
 	fmt.Print("\x1b[?25h")
 }
 
-func cursorMode(mode string){
+func cursorMode(mode string) {
 	var CursorModes map[string]int = map[string]int{
 		"blinking block":1,
 		"block":2,
@@ -212,7 +212,7 @@ func getTerminalSize() (int, int) {
 	var x int
 	var y int
 	for  i := 0; i < len(out); i++ {
-		if out[i] == byte(32){ // space
+		if out[i] == byte(32) { // space
 			spaced = true
 		} else if spaced {
 			xs+=string(out[i])
@@ -225,7 +225,7 @@ func getTerminalSize() (int, int) {
 	return y, x
 }
 
-func sleep(tm float64){
+func sleep(tm float64) {
 	var slp = time.Duration(1000000000.0*tm)
 	time.Sleep(slp)
 }
@@ -234,7 +234,7 @@ func LockLink( link chan bool ) {
 	for {if <-link{break} else {sleep(0.005)}}
 }
 
-func reverseString( str string ) string {
+func reverseString( str string ) (string) {
 	var now = make([]string, len(str))
 	var ret = make([]string, len(str))
 	for i:=0 ; i < len(str) ; i ++ {
@@ -284,7 +284,7 @@ func Print( thing interface{} ) {
 	printf("%v\n", thing)
 }
 
-func StoIA( str string ) []int {
+func StoIA( str string ) ([]int) {
 	values := make([]int, 0, len(str))
 	for _, raw := range str {
 		v, err := strconv.Atoi(string(raw))
@@ -297,7 +297,7 @@ func StoIA( str string ) []int {
 	return values
 }
 
-func RGB( r, g, b int ) string {
+func RGB( r, g, b int ) (string) {
 	return fmt.Sprintf("\x1b[38;2;%d;%d;%dm", r, g, b )
 }
 
@@ -310,7 +310,7 @@ var COLOR = map[string]string{
 	"yellow" : RGB(0xff, 0xff, 0x0),
 }
 
-func bog(ifer bool, f1, f2 interface{}) interface{} {
+func bog(ifer bool, f1, f2 interface{}) (interface{}) {
 	if (ifer) {
 		return f1
 	} else {
@@ -318,7 +318,7 @@ func bog(ifer bool, f1, f2 interface{}) interface{} {
 	}
 }
 
-func IinA(a interface{}, arr []interface{}) bool {
+func IinA(a interface{}, arr []interface{}) (bool) {
 	for _, b := range arr {
 		if b == a {
 			return true
@@ -327,7 +327,7 @@ func IinA(a interface{}, arr []interface{}) bool {
 	return false
 }
 
-func MakeArray(size int, value interface{}) []interface{} {
+func MakeArray(size int, value interface{}) ([]interface{}) {
 	var array = make([]interface{}, size)
 	for i := range array {
 		array[i] = value
@@ -335,26 +335,55 @@ func MakeArray(size int, value interface{}) []interface{} {
 	return array
 }
 
-func exists( filename string ) bool {
+func exists( filename string ) (bool) {
 	_, err := os.Stat(filename)
 	return !errors.Is(err, os.ErrNotExist)
 }
 
-/*
-//TODO
-func TryReadChan(ch chan interface{}) interface{}, error {
-	select {
-		case x, ok := <-ch:
-			if ok {
-				fmt.Printf("Value %d was read.\n", x)
-			} else {
-				fmt.Println("Channel closed!")
-			}
-		default:
-			fmt.Println("No value ready, moving on.")
-		}
+func panic( err error ) {
+	if ( err != nil ) {
+		printf("ERROR: %v\n", err)
+		exit(1)
+	}
 }
-*/
+
+func fread( file *FILE, blen int ) ([]byte, int) {
+	var err error
+	var brd int
+	var buff = make([]byte, blen)
+	brd, err = file.Read(buff)
+	panic(err)
+	return buff, brd
+}
+
+func SetBit(flag, S byte	) (byte) {
+	return S|flag
+}
+
+func UnsetBit(flag, S byte	) (byte) {
+	return S&^flag
+}
+
+func IsBitSet(flag, S byte	) (bool) {
+	return S&flag != 0
+}
+
+func ToggleBit(flag, S byte ) (byte) {
+	return S^flag
+}
+
+func DecompressByte( b byte ) ([]bool) {
+	return []bool{
+		b>>7& 1 == 1,
+		b>>6& 1 == 1,
+		b>>5& 1 == 1,
+		b>>4& 1 == 1,
+		b>>3& 1 == 1,
+		b>>2& 1 == 1,
+		b>>1& 1 == 1,
+		b   & 1 == 1,
+	}
+}
 
 //dodef
 var (
@@ -370,33 +399,35 @@ var (
 	fprintf = fmt.Fprintf
 	join = strings.Join
 	split = strings.Split
-	fopen = os.OpenFile
-	fcreate = os.Create
-	fclose = os.Close
+	fopen = os.Open
+	fmake = os.Create
+	fwriter = bufio.NewWriter
+	freader = bufio.NewReader
 )
 
 //const def
 const (
 	// nums
-	INT8MAX = int8(0x7f)
-	INT8MIN = int8(0)
+	I8MAX =  int8(0x7f)
+	I8MIN =  int8(-0x80)
 
-	INT16MAX = int16(0x7FFF)
-	INT16MIN = int16(0)
+	I16MAX = int16(0x7FFF)
+	I16MIN = int16(-0x8000)
 
-	INT32MAX = int32(0x7FFFFFFF)
-	INT32MIN = int32(0)
+	I32MAX = int32(0x7FFFFFFF)
+	I32MIN = int32(-0x80000000)
 
-	INT64MAX = int64(0x7FFFFFFFFFFFFFFF)
-	INT64MIN = int64(0)
+	I64MAX = int64(0x7FFFFFFFFFFFFFFF)
+	I64MIN = int64(-0x8000000000000000)
 
-	//
+	// file nums
 	F_append = os.O_APPEND
 	F_WR = os.O_WRONLY
 )
 
 
+
 //typedef
-type FILE = *os.File
+type FILE = os.File
 type reader = *bufio.Reader
 type writer = *bufio.Writer
