@@ -27,7 +27,7 @@ def Main() -> int:
 
 	files = []
 	config = {
-		"r":False,#run
+		'r':False,#run
 		# other flags here
 	}
 	BuildArgs = []
@@ -69,6 +69,7 @@ def DoFileMain(filename, config, BuildArgs) -> int:
 				lambda x: x.replace('\n', '').strip(),
 				f.readlines()
 			)),
+			{},
 			True
 		)
 	newfile = MakeFile(file, imports, includes, pack)
@@ -81,30 +82,27 @@ def DoFileMain(filename, config, BuildArgs) -> int:
 		cname = 'c'+filename
 	with open(cname, 'w') as f:
 		f.writelines(map(lambda x: x+'\n', newfile))
-	if not get("--stop-build").exists:
+	if not get("--no-build").exists:
 		if run:
 			if ss(f"go run {cname}"):
 				fprintf(eout, "could not run file {s}\n", filename)
-			if not get('-ke').exists:
-				ss(f"rm {cname}")
 		else:
 			if ss(f"go build {' '.join(BuildArgs)} {cname}"):
 				fprintf(eout, "could not compile file {s}\n", filename)
 				if not get('-ke').exists:
 					ss(f"rm {cname}")
-				exit(1)
+				return 1
 			ss(f"mv c{mvflname[:-3]} {mvflname[:-3]}")
-			if not get('-ke').exists:
-				ss(f"rm {cname}")
+		if not get('-ke').exists:
+			ss(f"rm {cname}")
 	return 0
 
-def CompFile(file: list[str], RetPack = True) -> list[str]:
+def CompFile(file: list[str], includes={} , RetPack = True) -> list[str]:
 	global paths
 
 	FILE = []
 	imporing = False
 	imports = set([])
-	includes = {}
 	pack = ""
 	for line in file:
 		if line[:7] == "package":
@@ -133,13 +131,14 @@ def CompFile(file: list[str], RetPack = True) -> list[str]:
 						else:
 							fprintf(stderr, "can't find included file {s}\n", includename)
 			if exists(includename):
+				if (includename in includes.keys()):continue
 				#FL = []
 				with open(includename, 'r') as f:
 					FL, _imports, _includes = CompFile(
 						list(map(
 							lambda x: x.replace('\n', '').strip(),
 							f.readlines()
-						)), False
+						)),includes , False
 					)
 					imports = set([*imports, *_imports])
 					includes[includename] = FL

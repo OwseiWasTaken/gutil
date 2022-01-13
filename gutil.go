@@ -250,7 +250,8 @@ func reverseString( str string ) (string) {
 
 var _clear map[string]func() //create a map for storing clear funcs
 
-func init() {
+func Init() {
+	InitRand()
 	_clear = make(map[string]func()) //Initialize it
 	_clear["linux"] = func() {
 		cmd := exec.Command("clear") //Linux example, its tested
@@ -381,7 +382,7 @@ func DecompressByte( b byte ) ([]bool) {
 		b>>3& 1 == 1,
 		b>>2& 1 == 1,
 		b>>1& 1 == 1,
-		b   & 1 == 1,
+		b	& 1 == 1,
 	}
 }
 
