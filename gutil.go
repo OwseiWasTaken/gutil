@@ -373,8 +373,8 @@ func ToggleBit(flag, S byte ) (byte) {
 	return S^flag
 }
 
-func DecompressByte( b byte ) ([]bool) {
-	return []bool{
+func DecompressByte( b byte ) ([8]bool) {
+	return [8]bool{
 		b>>7& 1 == 1,
 		b>>6& 1 == 1,
 		b>>5& 1 == 1,
@@ -384,6 +384,12 @@ func DecompressByte( b byte ) ([]bool) {
 		b>>1& 1 == 1,
 		b	& 1 == 1,
 	}
+}
+
+func pop(xs []interface{}, i int) (interface{}, []interface{}) {
+	y := xs[i]
+	ys := append(xs[:i], xs[i+1:]...)
+	return y, ys
 }
 
 //dodef
