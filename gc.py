@@ -27,7 +27,10 @@ def Main() -> int:
 
 	files = []
 	config = {
-		'r':False,#run
+		"run":False, # run, not compile
+		"clear":False, # clear screen
+		"kc":False, # keep cfile
+		"lt":False, # light text
 		# other flags here
 	}
 	BuildArgs = []
@@ -36,10 +39,12 @@ def Main() -> int:
 
 	for arg in argvs:
 		if arg[0] == '/' and arg[-1] == '/':
-			config[arg[1]] = True
+			config[arg[1:-1]] = True
 		else:
 			files.append(arg)
 
+	if config["clear"]:
+		ss("clear")
 	for file in files:
 		if ecode:=DoFileMain(file, config, BuildArgs):
 			return ecode
@@ -47,7 +52,12 @@ def Main() -> int:
 
 def DoFileMain(filename, config, BuildArgs) -> int:
 	#filename = get(None).first
-	run = config['r']
+	run = config["run"]
+	kc = config["kc"]
+	bright = config["lt"]
+	# make text bright again
+	if run and bright:
+		stdout.write("\x1b[38;2;255;255;255m\n\x1b[1;1H")
 
 	# usable input chek
 	if not filename:
@@ -89,11 +99,11 @@ def DoFileMain(filename, config, BuildArgs) -> int:
 		else:
 			if ss(f"go build {' '.join(BuildArgs)} {cname}"):
 				fprintf(eout, "could not compile file {s}\n", filename)
-				if not get('-ke').exists:
+				if not kc:
 					ss(f"rm {cname}")
 				return 1
 			ss(f"mv c{mvflname[:-3]} {mvflname[:-3]}")
-		if not get('-ke').exists:
+		if not kc:
 			ss(f"rm {cname}")
 	return 0
 
