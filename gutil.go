@@ -1,7 +1,10 @@
 package gutil
 
+// RUN InitGu!
+
 import (
 	"fmt"
+	"hash/fnv"
 	"os"
 	"log"
 	"io/ioutil"
@@ -65,7 +68,6 @@ var stringType reflect.Type = typeof("")
 var intType reflect.Type = typeof(2)
 var boolType reflect.Type = typeof(true)
 var floatType reflect.Type = typeof(0.1)
-var funcType reflect.Type = typeof(func() {})
 func Repr( v interface{} ) (string) {
 	var vtype reflect.Type = typeof(v)
 	var types map[reflect.Type]string = map[reflect.Type]string {}
@@ -73,7 +75,6 @@ func Repr( v interface{} ) (string) {
 	types[intType] = "I["
 	types[boolType] = "B["
 	types[floatType] = "F["
-	types[funcType] = "f["
 	return fmt.Sprintf("%s%v%s", types[vtype], v, "]")
 }
 
@@ -168,7 +169,7 @@ func rboolin(in int) (bool) {
 	return rand.Intn(in+1)==1
 }
 
-func input() (string) {
+func oldinput() (string) {
 	var b = ""
 	var i = []byte{0}
 	for{
@@ -234,7 +235,7 @@ func LockLink( link chan bool ) {
 	for {if <-link{break} else {sleep(0.005)}}
 }
 
-func reverseString( str string ) (string) {
+func ReverseString( str string ) (string) {
 	var now = make([]string, len(str))
 	var ret = make([]string, len(str))
 	for i:=0 ; i < len(str) ; i ++ {
@@ -250,16 +251,17 @@ func reverseString( str string ) (string) {
 
 var _clear map[string]func() //create a map for storing clear funcs
 
-func Init() {
+func InitGu() {
 	InitRand()
-	_clear = make(map[string]func()) //Initialize it
+	print("\x1b[38;2;255;255;255m\n\x1b[1;1H")
+	_clear = make(map[string]func()) //Initialize funcs map
 	_clear["linux"] = func() {
-		cmd := exec.Command("clear") //Linux example, its tested
+		cmd := exec.Command("clear")
 		cmd.Stdout = os.Stdout
 		cmd.Run()
 	}
 	_clear["windows"] = func() {
-		cmd := exec.Command("cmd", "/c", "cls") //Windows example, its tested
+		cmd := exec.Command("cmd", "/c", "cls")
 		cmd.Stdout = os.Stdout
 		cmd.Run()
 	}
@@ -271,7 +273,7 @@ func clear() {
 		value()
 	} else {
 		printf("Your platform [%s] is unsupported! I can't clear terminal screen :(", runtime.GOOS)
-		exit(1)
+		//exit(1)
 	}
 }
 
@@ -392,10 +394,80 @@ func pop(xs []interface{}, i int) (interface{}, []interface{}) {
 	return y, ys
 }
 
+func input(text string) (string) {
+	var ipt string
+	var err error
+	print(text)
+	ipt, err = stdin.ReadString('\n')
+	panic(err)
+	return ipt[:len(ipt)-1]
+}
+
+func HashStr(s string) uint32 {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return h.Sum32()
+}
+
+func HashInt(i int) uint32 {
+	h := fnv.New32a()
+	h.Write([]byte(sprintf("%d", i)))
+	return h.Sum32()
+}
+
+type HashMap struct {
+	length int
+	items []interface{}
+	hashes []int // before %len
+}
+
+func Hash( thing interface{} ) (int) {
+	var st string = sprintf("%v", thing)
+	for ;len(st) < 3;{
+		st+="0"
+	}
+	st+="\n"
+	return int(HashStr(st))
+}
+
+func MakeHashMap(keys []interface{}, results[]interface{}) (*HashMap) {
+	var kl = len(keys)
+	if ((kl) != len(results)) {
+		dprint(stderr, "ERROR", "[MakeHashMap] keys' len %d != results' len %d\n", kl, len(results))
+		exit(1)
+	}
+	var length = kl
+	_ = kl
+
+	// make Hash Array
+	var hashes = make([]int, length)
+	for i:=0;i<length;i++ {
+		hashes[i] = Hash(keys[i])
+	}
+
+	// make Ordered Items
+	var oi = make([]interface{}, length)
+	for i:=0;i<length;i++ {
+		oi[hashes[i]%length] = results[i]
+	}
+
+	//var hs HashMap = HashMap{length, oi, hashes}
+	return &HashMap{length, oi, hashes}
+}
+
+func dprint(stream *bufio.Writer, Type string, Text string, Info ...interface{}) {
+	if Type == "ERROR" {
+		Type = COLOR["red"]+"ERROR"+COLOR["nc"]
+	} // else if ... for other colors
+	fprintf(stream, fs("[%s]: %s", Type, fs(Text, Info...)))
+	stream.Flush()
+}
+
 //dodef
 var (
 	stdout *bufio.Writer = bufio.NewWriter(os.Stdout)
 	stderr *bufio.Writer = bufio.NewWriter(os.Stderr)
+	stdin  *bufio.Reader = bufio.NewReader(os.Stdin )
 	args map[string][]string = argvAssing(os.Args)
 	argv = os.Args[1:]
 	argc = len(os.Args)-1
@@ -410,6 +482,7 @@ var (
 	fmake = os.Create
 	fwriter = bufio.NewWriter
 	freader = bufio.NewReader
+	NULL = interface{}(nil)
 )
 
 //const def
@@ -417,19 +490,24 @@ const (
 	// nums
 	I8MAX =  int8(0x7f)
 	I8MIN =  int8(-0x80)
+	//U8MAX =  uint8(0xFF)
 
 	I16MAX = int16(0x7FFF)
 	I16MIN = int16(-0x8000)
+	//U16MAX = uint16(0xFFFF)
 
 	I32MAX = int32(0x7FFFFFFF)
 	I32MIN = int32(-0x80000000)
+	//U32MAX = uint32(0xFFFFFFFF)
 
 	I64MAX = int64(0x7FFFFFFFFFFFFFFF)
 	I64MIN = int64(-0x8000000000000000)
+	//U64MAX = uint64(0xFFFFFFFFFFFFFFFF)
 
 	// file nums
 	F_append = os.O_APPEND
 	F_WR = os.O_WRONLY
+
 )
 
 
