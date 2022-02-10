@@ -463,6 +463,40 @@ func dprint(stream *bufio.Writer, Type string, Text string, Info ...interface{})
 	stream.Flush()
 }
 
+// HS Any -> Any
+func HSGet( h *HashMap, key interface{} ) (interface{}) {
+	return h.items[Hash(key)%h.length]
+}
+
+// hash map (unsafe) add
+func HSUAdd( h *HashMap, key interface{}, result interface{}) {
+	h.length++
+	h.hashes = append(h.hashes, (Hash(key)))
+	h.items = append(h.items, result)
+	//return h
+}
+
+// hash map add
+func HSAdd( h *HashMap, key interface{}, result interface{}) {
+	var nh = Hash(key)
+	var nhl = nh%(h.length+1)
+	for i:=0;i<h.length;i++ {
+		if (h.hashes[i]%(h.length+1) == nhl) {
+			// TODO: stop this shit
+			dprint(stderr, "ERROR", "hash cruching: [%v->]%d/%d(=%d) == [%v->]%d/%d(=%d)!\n",
+			h.items[i],
+			// old hash
+			h.hashes[i], h.length+1,	h.hashes[i]%(h.length+1),
+			// added hash
+			key,
+			nh,			 h.length+1,	nhl)
+		}
+	}
+	h.length++
+	h.hashes = append(h.hashes, nh)
+	h.items = append(h.items, result)
+}
+
 //dodef
 var (
 	stdout *bufio.Writer = bufio.NewWriter(os.Stdout)
