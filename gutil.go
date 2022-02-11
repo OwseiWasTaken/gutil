@@ -171,7 +171,7 @@ func rboolin(in int) (bool) {
 
 func oldinput() (string) {
 	var b = ""
-	var i = []byte{0}
+	var i = make([]byte, 1)
 	for{
 		os.Stdin.Read(i)
 		i[0]++
@@ -204,7 +204,7 @@ func cursorMode(mode string) {
 
 func getTerminalSize() (int, int) {
 	cmd := exec.Command("stty", "size")
-	cmd.Stdin = os.Stdin
+	//cmd.Stdin = os.Stdin
 	out, _ := cmd.Output()
 	out = out[:len(out)-1]
 	var ys string
@@ -345,7 +345,7 @@ func exists( filename string ) (bool) {
 
 func panic( err error ) {
 	if ( err != nil ) {
-		printf("ERROR: %v\n", err)
+		dprint(stderr, "ERROR", "%v\n", err)
 		exit(1)
 	}
 }
@@ -495,6 +495,10 @@ func HSAdd( h *HashMap, key interface{}, result interface{}) {
 	h.length++
 	h.hashes = append(h.hashes, nh)
 	h.items = append(h.items, result)
+}
+
+func PS( thing interface{} ) { // print single
+	printf("%v\n", thing)
 }
 
 //dodef
