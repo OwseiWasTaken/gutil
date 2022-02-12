@@ -1,11 +1,7 @@
 #! /usr/bin/python3.10
 #imports
 from util import *
-# TODO
-# store already compiled files in /tmp and hash them
-# compare compiling files to the already compiled ones
-# how? idk
-# why? speed prolly
+from os.path import realpath
 
 paths = {}
 
@@ -31,6 +27,7 @@ def Main() -> int:
 		"clear":False, # clear screen
 		"kc":False, # keep cfile
 		"lt":False, # light text
+		"nb":False, # don't build cfile
 		# other flags here
 	}
 	BuildArgs = []
@@ -38,13 +35,15 @@ def Main() -> int:
 		BuildArgs = get('-ba').list
 
 	for arg in argvs:
-		if arg[0] == '/' and arg[-1] == '/':
-			config[arg[1:-1]] = True
-		else:
-			files.append(arg)
+		if len(arg):
+			if arg[0] == '/' and arg[-1] == '/':
+				config[arg[1:-1]] = True
+			else:
+				files.append(arg)
 
 	if config["clear"]:
 		ss("clear")
+
 	for file in files:
 		if ecode:=DoFileMain(file, config, BuildArgs):
 			return ecode
@@ -55,6 +54,7 @@ def DoFileMain(filename, config, BuildArgs) -> int:
 	run = config["run"]
 	kc = config["kc"]
 	bright = config["lt"]
+	nb = config["nb"]
 	# make text bright again
 	if run and bright:
 		stdout.write("\x1b[38;2;255;255;255m\n\x1b[1;1H")
@@ -68,11 +68,16 @@ def DoFileMain(filename, config, BuildArgs) -> int:
 		return 2
 	elif not isfile(filename):
 		#TODO make dir buildable
-		fprintf(stderr, "\"{s}\" is a directory, now a file\n", filename)
-		return 3
+		if "main.go" in ls(filename):
+			cd(filename)
+			filename="./main.go"
+		else:
+			fprintf(stderr, "can't find main.go in {s}\n", filename)
+			return 3
 
 
 	programname = '.'.join(filename.split('.')[:-1])
+
 	with open(filename, 'r') as f:
 		file, imports, includes, pack = CompFile(
 			list(map(
@@ -82,32 +87,40 @@ def DoFileMain(filename, config, BuildArgs) -> int:
 			{},
 			True
 		)
+
 	newfile = MakeFile(file, imports, includes, pack)
 	mvflname = filename
+
+	# make "cfile"
 	if '/' in filename:
 		cname = filename.split('/')
 		mvflname = cname[-1]
 		cname = '/'.join(cname[:-1])+'/'+'c'+cname[-1]
 	else:
 		cname = 'c'+filename
+
+	# write NewFile to cfile
 	with open(cname, 'w') as f:
 		f.writelines(map(lambda x: x+'\n', newfile))
-	if not get("--no-build").exists:
+
+	# build/run cfile
+	if not get("--no-build").exists | nb:
 		if run:
 			if ss(f"go run {cname}"):
-				fprintf(eout, "could not run file {s}\n", filename)
+				fprintf(stderr, "could not run file {s}\n", filename)
 		else:
 			if ss(f"go build {' '.join(BuildArgs)} {cname}"):
-				fprintf(eout, "could not compile file {s}\n", filename)
+				fprintf(stderr, "could not compile file {s}\n", filename)
 				if not kc:
 					ss(f"rm {cname}")
 				return 1
 			ss(f"mv c{mvflname[:-3]} {mvflname[:-3]}")
+
 		if not kc:
 			ss(f"rm {cname}")
 	return 0
 
-def CompFile(file: list[str], includes={} , RetPack = True) -> list[str]:
+def CompFile(file: list[str], includes={} , RetPack = True) -> tuple[list[str], list[str], list[str], Optional[str]]:
 	global paths
 
 	FILE = []
