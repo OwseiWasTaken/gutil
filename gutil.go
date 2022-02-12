@@ -300,8 +300,8 @@ func StoIA( str string ) ([]int) {
 	return values
 }
 
-func RGB( r, g, b int ) (string) {
-	return fmt.Sprintf("\x1b[38;2;%d;%d;%dm", r, g, b )
+func RGB( r, g, b interface{} ) (string) {
+	return fmt.Sprintf("\x1b[38;2;%v;%v;%vm", r, g, b )
 }
 
 var COLOR = map[string]string{
