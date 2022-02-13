@@ -125,16 +125,15 @@ func GetCh() (string) {
 	return string(b)
 }
 
-func GetChByte() (byte) {
-	var b []byte = make([]byte, 1)
-	os.Stdin.Read(b)
-	return b[0]
-}
-
-func getChBytes() ([]byte) {
-	var b []byte = make([]byte, 5)
+func GetChByte() ([]byte) { // 6 bytes
+	var b []byte = make([]byte, 6)
 	os.Stdin.Read(b)
 	return b
+}
+
+func GetChBA(b *[]byte) ([]byte) {
+	os.Stdin.Read(*b)
+	return *b
 }
 
 func spos(y int, x int) (string) {
@@ -499,6 +498,16 @@ func HSAdd( h *HashMap, key interface{}, result interface{}) {
 
 func PS( thing interface{} ) { // print single
 	printf("%v\n", thing)
+}
+
+func HideCursor() () {
+	fprintf(stdout, "\x1b[?25l")
+	stdout.Flush()
+}
+
+func ShowCursor() () {
+	fprintf(stdout, "\x1b[?25h")
+	stdout.Flush()
 }
 
 //dodef
