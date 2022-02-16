@@ -181,14 +181,6 @@ func oldinput() (string) {
 	return b
 }
 
-func hideCursor() {
-	fmt.Print("\x1b[?25l")
-}
-
-func showCursor() {
-	fmt.Print("\x1b[?25h")
-}
-
 func cursorMode(mode string) {
 	var CursorModes map[string]int = map[string]int{
 		"blinking block":1,
