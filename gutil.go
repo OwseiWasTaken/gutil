@@ -176,11 +176,11 @@ func oldinput() (string) {
 	return b
 }
 
-func hideCursor() {
+func HideCursor() {
 	fmt.Print("\x1b[?25l")
 }
 
-func showCursor() {
+func ShowCursor() {
 	fmt.Print("\x1b[?25h")
 }
 
