@@ -35,8 +35,8 @@ def Main() -> int:
 	RunArgs = []
 	if get('--ba').exists:
 		BuildArgs = get('--ba').list
-	if get('-').exists:
-		RunArgs = get('-').list
+	if get('--ra').exists:
+		RunArgs = get('--ra').list
 
 	for arg in argvs:
 		if len(arg):
@@ -113,13 +113,12 @@ def DoFileMain(filename, config, BuildArgs, RunArgs) -> int:
 	# build/run cfile
 	if not nb:
 		if run:
-			ra = ' '.join(RunArgs)
+			ra = ' - '+''.join(RunArgs)+' '
 			if cmd(f"go run {cname} {ra}"):
 				fprintf(stderr, "could not run file {s}\n", filename)
 		else:
 			ba = ' '+''.join(DoAll(lambda x: " -"+x, BuildArgs))+' '
-			if ba == "  ":ba=" "
-			if _:=cmd(f"go build{ba}{cname}"):
+			if _:=cmd(f"go build {cname}{ba}"):
 				fprintf(stderr, "could not compile file {s}\n", filename)
 				if not kc:
 					cmd(f"rm {cname}")
@@ -179,13 +178,13 @@ def CompFile(file: list[str], includes={} , RetPack = True) -> tuple[list[str], 
 
 						# include folder/main.go
 						with open(includename+"/main.go", 'r') as f:
-							FL.append("// include %s/" % includename)
 							FL, _imports, _includes = CompFile(
 								list(map(
 									lambda x: x.replace('\n', '').strip(),
 									f.readlines()
 								)),includes , False
 							)
+							FL.insert(0, "// include %s/" % includename)
 							imports = set([*imports, *_imports])
 							includes[abspath(includename)] = FL
 							includes = includes | _includes
