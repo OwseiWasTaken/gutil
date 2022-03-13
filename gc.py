@@ -1,7 +1,7 @@
 #! /usr/bin/python3.10
 #imports
 from util import *
-from os.path import realpath
+from os.path import realpath, abspath
 
 paths = {}
 
@@ -28,11 +28,15 @@ def Main() -> int:
 		"kc":False, # keep cfile
 		"lt":False, # light text
 		"nb":False, # don't build cfile
+		"bnr":False, # build and run
 		# other flags here
 	}
 	BuildArgs = []
-	if get('-ba').exists:
-		BuildArgs = get('-ba').list
+	RunArgs = []
+	if get('--ba').exists:
+		BuildArgs = get('--ba').list
+	if get('-').exists:
+		RunArgs = get('-').list
 
 	for arg in argvs:
 		if len(arg):
@@ -40,21 +44,24 @@ def Main() -> int:
 				config[arg[1:-1]] = True
 			else:
 				files.append(arg)
+	if len(files) == 0:
+		files = ["."]
 
 	if config["clear"]:
-		ss("clear")
+		cmd("clear")
 
 	for file in files:
-		if ecode:=DoFileMain(file, config, BuildArgs):
+		if ecode:=DoFileMain(file, config, BuildArgs, RunArgs):
 			return ecode
 	return 0
 
-def DoFileMain(filename, config, BuildArgs) -> int:
+def DoFileMain(filename, config, BuildArgs, RunArgs) -> int:
 	#filename = get(None).first
 	run = config["run"]
 	kc = config["kc"]
 	bright = config["lt"]
 	nb = config["nb"]
+	bnr = config["bnr"]
 	# make text bright again
 	if run and bright:
 		stdout.write("\x1b[38;2;255;255;255m\n\x1b[1;1H")
@@ -104,20 +111,24 @@ def DoFileMain(filename, config, BuildArgs) -> int:
 		f.writelines(map(lambda x: x+'\n', newfile))
 
 	# build/run cfile
-	if not get("--no-build").exists | nb:
+	if not nb:
 		if run:
-			if ss(f"go run {cname}"):
+			ra = ' '.join(RunArgs)
+			if cmd(f"go run {cname} {ra}"):
 				fprintf(stderr, "could not run file {s}\n", filename)
 		else:
-			if ss(f"go build {' '.join(BuildArgs)} {cname}"):
+			ba = ' '+''.join(DoAll(lambda x: " -"+x, BuildArgs))+' '
+			if ba == "  ":ba=" "
+			if _:=cmd(f"go build{ba}{cname}"):
 				fprintf(stderr, "could not compile file {s}\n", filename)
 				if not kc:
-					ss(f"rm {cname}")
+					cmd(f"rm {cname}")
 				return 1
-			ss(f"mv c{mvflname[:-3]} {mvflname[:-3]}")
-
+			cmd(f"mv c{mvflname[:-3]} {mvflname[:-3]}") # renames compiled c{file} -> {file}
+			if not _ and bnr: # build and run
+				cmd(f"./{mvflname[:-3]}")
 		if not kc:
-			ss(f"rm {cname}")
+			cmd(f"rm {cname}")
 	return 0
 
 def CompFile(file: list[str], includes={} , RetPack = True) -> tuple[list[str], list[str], list[str], Optional[str]]:
@@ -130,6 +141,8 @@ def CompFile(file: list[str], includes={} , RetPack = True) -> tuple[list[str], 
 	for line in file:
 		if line[:7] == "package":
 			pack = line
+		elif line[0:2] == "#!":
+			continue
 		elif line == ")" and imporing:
 			imporing = False
 		elif imporing:
@@ -141,7 +154,7 @@ def CompFile(file: list[str], includes={} , RetPack = True) -> tuple[list[str], 
 			if includename in paths.keys():
 				includename = paths[includename]
 			else:
-				if not includename.endswith('.go'):
+				if not includename.endswith('.go') and exists(includename+".go"):
 					includename+=".go"
 
 				if not exists(includename):
@@ -153,22 +166,54 @@ def CompFile(file: list[str], includes={} , RetPack = True) -> tuple[list[str], 
 								includename = "gutil/"+includename
 						else:
 							fprintf(stderr, "can't find included file {s}\n", includename)
+							exit(1)
 			if exists(includename):
-				if (includename in includes.keys()):continue
+				if (abspath(includename) in includes.keys()):continue
 				#FL = []
-				with open(includename, 'r') as f:
-					FL, _imports, _includes = CompFile(
-						list(map(
-							lambda x: x.replace('\n', '').strip(),
-							f.readlines()
-						)),includes , False
-					)
-					imports = set([*imports, *_imports])
-					includes[includename] = FL
-					includes = includes | _includes
+				if not isfile(includename):
+					if exists(includename+"/main.go"):
+						# remember .
+						p = pwd()
+						# goto included folder
+						cd(includename)
+
+						# include folder/main.go
+						with open(includename+"/main.go", 'r') as f:
+							FL.append("// include %s/" % includename)
+							FL, _imports, _includes = CompFile(
+								list(map(
+									lambda x: x.replace('\n', '').strip(),
+									f.readlines()
+								)),includes , False
+							)
+							imports = set([*imports, *_imports])
+							includes[abspath(includename)] = FL
+							includes = includes | _includes
+
+						# comeback
+						cd(p)
+					else:
+						fprintf(
+							stderr,
+							"can't include dir {s}, can't find {s}/main.go\n",
+							includename, includename
+						)
+						exit(1)
+				else:
+					with open(includename, 'r') as f:
+						FL, _imports, _includes = CompFile(
+							list(map(
+								lambda x: x.replace('\n', '').strip(),
+								f.readlines()
+							)),includes , False
+						)
+						imports = set([*imports, *_imports])
+						includes[includename] = FL
+						includes = includes | _includes
 				#FILE+=FL[1:]
 			else:
 				fprintf(stderr, "No Such File \"{s}\"\n", includename)
+				exit(1)
 		else:
 			FILE.append(line)
 	if RetPack:
