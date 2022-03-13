@@ -260,7 +260,7 @@ func clear() {
 		value()
 	} else {
 		printf("Your platform [%s] is unsupported! I can't clear terminal screen :(", runtime.GOOS)
-		//exit(1)
+		exit(1)
 	}
 }
 
