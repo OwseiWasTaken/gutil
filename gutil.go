@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"hash/fnv"
 	"os"
-	"log"
 	"io/ioutil"
 	"reflect"
 	"bytes"
@@ -18,9 +17,10 @@ import (
 	"bufio"
 	"runtime"
 	"errors"
+	"io/fs"
 )
 
-func argvAssing( argv[] string ) (map[string][]string) {
+func ArgvAssing( argv[] string ) (map[string][]string) {
 	var argc int = len(argv)
 	var dict map[string][]string = map[string][]string {}
 	var now string = ""
@@ -57,10 +57,10 @@ func get( gts string ) (_s_get) {
 		_ = _first
 	}
 	return _s_get{
-		Exists: _exists,
-		First: _first,
-		Last: _last,
-		List: _list,
+		_exists,
+		_first,
+		_last,
+		_list,
 	}
 }
 
@@ -84,9 +84,7 @@ func typeof( v interface{} ) (reflect.Type) {
 
 func ReadFile( filename string ) (string) {
 	file, err := os.Open(filename) // For read access.
-	if err != nil {
-		log.Fatal(err)
-	}
+	panic(err)
 	_ = err
 	FILE, err := ioutil.ReadAll(file)
 	var FILES bytes.Buffer
@@ -97,9 +95,7 @@ func ReadFile( filename string ) (string) {
 
 func ReadFileBytes( filename string ) ([]byte) {
 	file, err := os.Open(filename) // For read access.
-	if err != nil {
-		log.Fatal(err)
-	}
+	panic(err)
 	_ = err
 	FILE, err := ioutil.ReadAll(file)
 	var FILES bytes.Buffer
@@ -110,13 +106,11 @@ func ReadFileBytes( filename string ) ([]byte) {
 
 func WriteFile( filename string, write string) {
 	err := os.WriteFile(filename, []byte(write), 0644) // 1X 2W 4R
-	if err != nil{
-		log.Fatal(err)
-	}
+	panic(err)
 }
 
 func InitGetCh() {
-	exec.Command("stty", "-F", "/dev/tty","-echo", "cbreak", "min", "1").Run()
+	exec.Command("/usr/bin/stty", "-F", "/dev/tty","-echo", "cbreak", "min", "1").Run()
 }
 
 func GetCh() (string) {
@@ -141,7 +135,8 @@ func spos(y int, x int) (string) {
 }
 
 func pos(y int, x int) {
-	fmt.Printf("\x1b[%d;%dH", y+1, x+1)
+	fprintf(stdout, "\x1b[%d;%dH", y+1, x+1)
+	stdout.Flush()
 }
 
 func printat(y int, x int, prt interface{}) {
@@ -189,7 +184,7 @@ func showCursor() {
 	fmt.Print("\x1b[?25h")
 }
 
-func cursorMode(mode string) {
+func CursorMode(mode string) () {
 	var CursorModes map[string]int = map[string]int{
 		"blinking block":1,
 		"block":2,
@@ -198,13 +193,14 @@ func cursorMode(mode string) {
 		"blinking I-beam":5,
 		"I-beam":6,
 	}
-	fmt.Print("\033[%dq", CursorModes[mode])
+	fmt.Printf("\x1b[%d q", CursorModes[mode])
 }
 
-func getTerminalSize() (int, int) {
+func GetTerminalSize() (int, int) {
 	cmd := exec.Command("stty", "size")
-	//cmd.Stdin = os.Stdin
-	out, _ := cmd.Output()
+	cmd.Stdin = os.Stdin
+	out, r := cmd.Output()
+	panic(r)
 	out = out[:len(out)-1]
 	var ys string
 	var xs string
@@ -255,7 +251,7 @@ func InitGu() {
 	print("\x1b[38;2;255;255;255m\n\x1b[1;1H")
 	_clear = make(map[string]func()) //Initialize funcs map
 	_clear["linux"] = func() {
-		cmd := exec.Command("clear")
+		cmd := exec.Command("/usr/bin/clear")
 		cmd.Stdout = os.Stdout
 		cmd.Run()
 	}
@@ -291,7 +287,7 @@ func StoIA( str string ) ([]int) {
 	for _, raw := range str {
 		v, err := strconv.Atoi(string(raw))
 		if err != nil {
-			log.Print(err)
+			panic(err)
 			continue
 		}
 		values = append(values, v)
@@ -458,7 +454,7 @@ func dprint(stream *bufio.Writer, Type string, Text string, Info ...interface{})
 	if Type == "ERROR" {
 		Type = COLOR["red"]+"ERROR"+COLOR["nc"]
 	} // else if ... for other colors
-	fprintf(stream, fs("[%s]: %s", Type, fs(Text, Info...)))
+	fprintf(stream, spf("[%s]: %s", Type, spf(Text, Info...)))
 	stream.Flush()
 }
 
@@ -510,22 +506,94 @@ func ShowCursor() () {
 	stdout.Flush()
 }
 
+func _ls(dr string) ([]fs.FileInfo) {
+	dir, err := ioutil.ReadDir(dr)
+	panic(err)
+	return dir
+}
+
+func LsSize( dr string ) ( []int64 ) {
+	var dir []fs.FileInfo = _ls(dr)
+	var buff = make([]int64, len(dir))
+	for i:=0;i<len(dir);i++ {
+		buff[i] = dir[i].Size()
+	}
+	return buff
+}
+
+func LsSumSize( dr string ) (int64) {
+	var dir []fs.FileInfo = _ls(dr)
+	var buff int64 = 0
+	for i:=0;i<len(dir);i++ {
+		buff += dir[i].Size()
+		if (dir[i].IsDir()){
+			buff+=LsSumSize(dr+(dir[i].Name())+"/")
+		}
+	}
+	return buff
+}
+
+var _LsSumSizef_Postfix_to_char = map[int]string{
+	0:"b",
+	1:"kb",
+	2:"mb",
+	3:"gb",
+	4:"tb",
+}
+
+// this shit aint working
+// dunno why
+// good night
+func _LsSumSizef( dr string , threshold float64 ) ( string ) {
+	var size float64 = float64(LsSumSize(dr))
+	var postfix int = 0
+	var sz string
+	//0-b 1-kb 2-mb 3-gb 4-tb
+	for ;(size/1024)>threshold;{
+		postfix++
+		size = size/1024
+	}
+	sz = spf("%.2f%s", size, _LsSumSizef_Postfix_to_char[postfix])
+	return sz
+}
+
+func LsSumSizef( dr string ) ( string ) {
+	return _LsSumSizef(dr, 10)
+}
+
+func ls(dr string) ([]string) {
+	var dir []fs.FileInfo = _ls(dr)
+	var buff = make([]string, len(dir))
+	for i:=0;i<len(dir);i++ {
+		buff[i] = dir[i].Name()
+		if (dir[i].IsDir()){
+			buff[i]+="/"
+		}
+	}
+	return buff
+}
+
+func color(fr,fg,fb, br,bg,bb interface{}) (string) {
+	return spf("\x1b[38;2;%v;%v;%v;48;2;%v;%v;%vm", fr,fg,fb, br,bg,bb)
+}
+
 //dodef
 var (
 	stdout *bufio.Writer = bufio.NewWriter(os.Stdout)
 	stderr *bufio.Writer = bufio.NewWriter(os.Stderr)
 	stdin  *bufio.Reader = bufio.NewReader(os.Stdin )
-	args map[string][]string = argvAssing(os.Args)
+	args map[string][]string = ArgvAssing(os.Args)
 	argv = os.Args[1:]
 	argc = len(os.Args)-1
 	format = fmt.Sprintf
 	printf = fmt.Printf
 	sprintf = fmt.Sprintf
-	fs = fmt.Sprintf
+	spf = fmt.Sprintf
 	fprintf = fmt.Fprintf
 	join = strings.Join
 	split = strings.Split
 	fopen = os.Open
+	fclose = func (f *FILE) {f.Close()}
 	fmake = os.Create
 	fwriter = bufio.NewWriter
 	freader = bufio.NewReader
@@ -534,30 +602,28 @@ var (
 
 //const def
 const (
-	// nums
+	// max-mins
+	// 8 bytes
 	I8MAX =  int8(0x7f)
 	I8MIN =  int8(-0x80)
-	//U8MAX =  uint8(0xFF)
-
+	U8MAX =  uint8(0xFF)
+	// 16 bytes
 	I16MAX = int16(0x7FFF)
 	I16MIN = int16(-0x8000)
-	//U16MAX = uint16(0xFFFF)
-
+	U16MAX = uint16(0xFFFF)
+	// 32 bytes
 	I32MAX = int32(0x7FFFFFFF)
 	I32MIN = int32(-0x80000000)
-	//U32MAX = uint32(0xFFFFFFFF)
-
+	U32MAX = uint32(0xFFFFFFFF)
+	// 64 bytes
 	I64MAX = int64(0x7FFFFFFFFFFFFFFF)
 	I64MIN = int64(-0x8000000000000000)
-	//U64MAX = uint64(0xFFFFFFFFFFFFFFFF)
-
+	U64MAX = uint64(0xFFFFFFFFFFFFFFFF)
 	// file nums
 	F_append = os.O_APPEND
 	F_WR = os.O_WRONLY
 
 )
-
-
 
 //typedef
 type FILE = os.File
