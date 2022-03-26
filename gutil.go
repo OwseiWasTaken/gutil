@@ -48,13 +48,9 @@ func get( gts string ) (_s_get) {
 	var _ll int = len(_list)
 	var _first string = ""
 	var _last string = ""
-	_ = _last
-	_ = _first
-	if _ll > 1 {
-		var _first string = _list[0]
-		var _last string = _list[_ll-1]
-		_ = _last
-		_ = _first
+	if _ll > 0 {
+		_first = _list[0]
+		_last = _list[_ll-1]
 	}
 	return _s_get{
 		_exists,
@@ -240,7 +236,7 @@ var _clear map[string]func() //create a map for storing clear funcs
 
 func InitGu() {
 	InitRand()
-	print("\x1b[38;2;255;255;255m\n\x1b[1;1H")
+	//print("\x1b[38;2;255;255;255m\n\x1b[1;1H")
 	_clear = make(map[string]func()) //Initialize funcs map
 	_clear["linux"] = func() {
 		cmd := exec.Command("/usr/bin/clear")
