@@ -18,6 +18,16 @@ def Main() -> int:
 	})
 
 	paths = UseXmp(confile)["paths"]
+	if get("-l").exists:
+		ll = get("-l").list
+		np = {}
+		for l in ll:
+			if ':' in l:
+				np[l.split(':')[0]] = l.split(':')[1]
+			else:
+				fprintf(stderr, "-l error, can't find ':' division on `{s}`", l)
+				exit(1)
+		paths = paths | np
 
 	argvs = get("").list
 
@@ -43,7 +53,11 @@ def Main() -> int:
 			if arg[0] == '/' and arg[-1] == '/':
 				config[arg[1:-1]] = True
 			else:
-				files.append(arg)
+				if '.' in arg:
+					files.append(arg)
+				else:
+					if exists(arg+".go") and not exists(arg):
+						files.append(arg+".go")
 	if len(files) == 0:
 		files = ["."]
 
@@ -160,12 +174,8 @@ def CompFile(file: list[str], includes={} , RetPack = True) -> tuple[list[str], 
 					if exists("../"+includename):
 						includename = "../"+includename
 					else:
-						if includename == "gutil.go":
-							if exists("gutil/"+includename):
-								includename = "gutil/"+includename
-						else:
-							fprintf(stderr, "can't find included file {s}\n", includename)
-							exit(1)
+						fprintf(stderr, "can't find included file {s}\n", includename)
+						exit(1)
 			if exists(includename):
 				if (abspath(includename) in includes.keys()):continue
 				#FL = []
