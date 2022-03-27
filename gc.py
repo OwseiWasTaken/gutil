@@ -81,20 +81,23 @@ def DoFileMain(filename, config, BuildArgs, RunArgs) -> int:
 		stdout.write("\x1b[38;2;255;255;255m\n\x1b[1;1H")
 
 	# usable input chek
-	if not filename:
-		fprintf(stderr, "input filename!\n")
-		return 1
-	elif not exists(filename):
+	if not exists(filename):
 		fprintf(stderr, "file \"{s}\" doesn't exist!\n", filename)
 		return 2
 	elif not isfile(filename):
-		#TODO make dir buildable
 		if "main.go" in ls(filename):
 			cd(filename)
 			filename="./main.go"
 		else:
 			fprintf(stderr, "can't find main.go in {s}\n", filename)
 			return 3
+
+	now = pwd()
+	env = false
+	if "/" in filename:
+		env = true
+		cd( '/'.join(filename.split("/")[:-1])+"/" )
+		filename = filename.split("/")[-1]
 
 
 	programname = '.'.join(filename.split('.')[:-1])
@@ -108,6 +111,9 @@ def DoFileMain(filename, config, BuildArgs, RunArgs) -> int:
 			{},
 			True
 		)
+
+	if env:
+		cd(now) # old wd
 
 	newfile = MakeFile(file, imports, includes, pack)
 	mvflname = filename
@@ -169,7 +175,6 @@ def CompFile(file: list[str], includes={} , RetPack = True) -> tuple[list[str], 
 			else:
 				if not includename.endswith('.go') and exists(includename+".go"):
 					includename+=".go"
-
 				if not exists(includename):
 					if exists("../"+includename):
 						includename = "../"+includename
