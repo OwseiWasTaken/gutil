@@ -137,7 +137,7 @@ def DoFileMain(filename, config, BuildArgs, RunArgs) -> int:
 			if cmd(f"go run {cname} {ra}"):
 				fprintf(stderr, "could not run file {s}\n", filename)
 		else:
-			ba = ' '+''.join(DoAll(lambda x: " -"+x, BuildArgs))+' '
+			ba = ' '+''.join(DoAll(lambda x: " "+x, BuildArgs))+' '
 			if _:=cmd(f"go build {cname}{ba}"):
 				fprintf(stderr, "could not compile file {s}\n", filename)
 				if not kc:
