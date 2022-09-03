@@ -93,9 +93,9 @@ def DoFileMain(filename, config, BuildArgs, RunArgs) -> int:
 			return 3
 
 	now = pwd()
-	env = false
+	env = False
 	if "/" in filename:
-		env = true
+		env = True
 		cd( '/'.join(filename.split("/")[:-1])+"/" )
 		filename = filename.split("/")[-1]
 
@@ -168,6 +168,36 @@ def CompFile(file: list[str], includes={} , RetPack = True) -> tuple[list[str], 
 			imports.add(line)
 		elif line[:6] == "import" and line[7] == '(':
 			imporing = True
+		elif line[:7] == "Include":
+			includename = line[9:][:-1]
+			if includename in paths.keys():
+				includename = paths[includename]
+			if exists(includename):
+				if isfile(includename):
+					fprintf(stderr, "can't Include file {s}\n", includename)
+					exit(3)
+				# remember .
+				p = pwd()
+				# goto included folder
+				cd(includename)
+
+				# include folder/main.go
+				with open("./main.go", 'r') as f:
+					FL, _imports, _includes = CompFile(
+						list(map(
+							lambda x: x.replace('\n', '').strip(),
+							f.readlines()
+						)),includes , False
+					)
+					FL.insert(0, "// Include %s/" % includename)
+					imports = set([*imports, *_imports])
+					includes[abspath(includename)] = FL
+					includes = includes | _includes
+
+				# comeback
+				cd(p)
+			else:
+				fprintf(stderr, "can't find Included directory {s}\n", includename)
 		elif line[:7] == "include":
 			includename = line[9:][:-1]
 			if includename in paths.keys():
