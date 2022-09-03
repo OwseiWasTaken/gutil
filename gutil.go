@@ -18,9 +18,11 @@ import (
 	"runtime"
 	"errors"
 	"io/fs"
+	"unicode"
+	//"github.com/eiannone/keyboard"
 )
 
-func ArgvAssing( argv[] string ) (map[string][]string) {
+func ArgvAssing( argv []string ) (map[string][]string) {
 	var argc int = len(argv)
 	var dict map[string][]string = map[string][]string {}
 	var now string = ""
@@ -105,25 +107,46 @@ func WriteFile( filename string, write string) {
 	panic(err)
 }
 
-func InitGetCh() {
-	exec.Command("/usr/bin/stty", "-F", "/dev/tty","-echo", "cbreak", "min", "1").Run()
-}
+var GetCh func()(string)
 
-func GetCh() (string) {
+/*
+func WindowsGetCh() (string) {
+	char, _, err := keyboard.GetSingleKey()
+	if (err != nil) {
+		panic(err)
+	}
+	return string(char)
+}
+*/
+
+func LinuxGetCh() (string) {
 	var b []byte = make([]byte, 1)
 	os.Stdin.Read(b)
 	return string(b)
 }
 
-func GetChByte() ([]byte) { // 6 bytes
-	var b []byte = make([]byte, 6)
+func InitGetCh() {
+	//TODO(1) WindowsGetCh: burh
+	if runtime.GOOS=="linux" {
+		exec.Command("/usr/bin/stty", "-F", "/dev/tty","-echo", "cbreak", "min", "1").Run()
+		GetCh=LinuxGetCh
+	} else {
+		//e := keyboard.Open()
+		//panic(e)
+		//GetCh=WindowsGetCh
+	}
+}
+
+func GetChByte() ([]byte) {
+	var b []byte = make([]byte, 8)
 	os.Stdin.Read(b)
 	return b
 }
 
-func GetChBA(b *[]byte) ([]byte) {
-	os.Stdin.Read(*b)
-	return *b
+func GetChBA(b *[]byte) () {
+	var v []byte = make([]byte, 8)
+	os.Stdin.Read(v)
+	b = &v
 }
 
 func spos(y int, x int) (string) {
@@ -580,9 +603,8 @@ var (
 	fprintf = fmt.Fprintf
 	join = strings.Join
 	split = strings.Split
-	fopen = os.Open
-	fclose = func (f *FILE) {f.Close()}
 	fmake = os.Create
+	IsUpper = unicode.IsUpper
 	fwriter = bufio.NewWriter
 	freader = bufio.NewReader
 	NULL = interface{}(nil)
