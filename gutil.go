@@ -85,6 +85,7 @@ func ReadFile( filename string ) (string) {
 	panic(err)
 	_ = err
 	FILE, err := ioutil.ReadAll(file)
+	panic(err)
 	var FILES bytes.Buffer
 	FILES.Write(FILE)
 
@@ -137,16 +138,21 @@ func InitGetCh() {
 	}
 }
 
-func GetChByte() ([]byte) {
+func GetChByte ( s *bufio.Reader ) ([]byte) {
 	var b []byte = make([]byte, 8)
-	os.Stdin.Read(b)
+	s.Read(b)
 	return b
 }
 
-func GetChBA(b *[]byte) () {
-	var v []byte = make([]byte, 8)
-	os.Stdin.Read(v)
-	b = &v
+func GetChNByte ( s *bufio.Reader, n int ) ([]byte) {
+	var b []byte = make([]byte, n)
+	s.Read(b)
+	return b
+}
+
+func GetChBA(s *bufio.Reader, b *[]byte) (error) {
+	_, a := s.Read(*b)
+	return a
 }
 
 func spos(y int, x int) (string) {
@@ -190,6 +196,7 @@ func oldinput() (string) {
 		i[0]++
 		if i[0] == 11{break}
 		b+=string(i[0]-1)
+		print(string(i[0]-1))
 		i = []byte{0}
 	}
 	return b
@@ -588,6 +595,10 @@ func color(fr,fg,fb, br,bg,bb interface{}) (string) {
 	return spf("\x1b[38;2;%v;%v;%v;48;2;%v;%v;%vm", fr,fg,fb, br,bg,bb)
 }
 
+func kill(message string) () {
+	panic(errors.New(message))
+}
+
 //dodef
 var (
 	stdout *bufio.Writer = bufio.NewWriter(os.Stdout)
@@ -595,7 +606,7 @@ var (
 	stdin  *bufio.Reader = bufio.NewReader(os.Stdin )
 	args map[string][]string = ArgvAssing(os.Args)
 	argv = os.Args[1:]
-	argc = len(os.Args)-1
+	argc = len(argv)
 	format = fmt.Sprintf
 	printf = fmt.Printf
 	sprintf = fmt.Sprintf
@@ -607,7 +618,6 @@ var (
 	IsUpper = unicode.IsUpper
 	fwriter = bufio.NewWriter
 	freader = bufio.NewReader
-	NULL = interface{}(nil)
 )
 
 //const def
