@@ -551,12 +551,13 @@ func LsSumSize( dr string ) (int64) {
 	return buff
 }
 
-var _LsSumSizef_Postfix_to_char = map[int]string{
+var _LsSumSizef_Postfix_to_char = []string{
 	0:"b",
 	1:"kb",
 	2:"mb",
 	3:"gb",
 	4:"tb",
+	5:"pt",
 }
 
 // this shit aint working
@@ -593,6 +594,10 @@ func ls(dr string) ([]string) {
 
 func color(fr,fg,fb, br,bg,bb interface{}) (string) {
 	return spf("\x1b[38;2;%v;%v;%v;48;2;%v;%v;%vm", fr,fg,fb, br,bg,bb)
+}
+
+func bkcolor(br,bg,bb interface{}) (string) {
+	return spf("\x1b[48;2;%v;%v;%vm", br,bg,bb)
 }
 
 func kill(message string) () {
