@@ -133,7 +133,7 @@ def DoFileMain(filename, config, BuildArgs, RunArgs) -> int:
 	# build/run cfile
 	if not nb:
 		if run:
-			ra = ' - '+''.join(RunArgs)+' '
+			ra = ''.join(RunArgs)+' '
 			if cmd(f"go run {cname} {ra}"):
 				fprintf(stderr, "could not run file {s}\n", filename)
 		else:
