@@ -196,7 +196,6 @@ func oldinput() (string) {
 		i[0]++
 		if i[0] == 11{break}
 		b+=string(i[0]-1)
-		print(string(i[0]-1))
 		i = []byte{0}
 	}
 	return b
@@ -510,7 +509,7 @@ func HSAdd( h *HashMap, key interface{}, result interface{}) {
 	h.items = append(h.items, result)
 }
 
-func PS( thing interface{} ) { // print single
+func PS( thing ...interface{} ) { // print single
 	printf("%v\n", thing)
 }
 
