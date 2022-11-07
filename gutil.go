@@ -603,6 +603,12 @@ func kill(message string) () {
 	panic(errors.New(message))
 }
 
+func assert(thing bool, message string) {
+	if !thing {
+		kill(message)
+	}
+}
+
 //dodef
 var (
 	stdout *bufio.Writer = bufio.NewWriter(os.Stdout)
