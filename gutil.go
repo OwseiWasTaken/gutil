@@ -264,6 +264,7 @@ func ReverseString( str string ) (string) {
 var _clear map[string]func() //create a map for storing clear funcs
 
 func InitGu() {
+
 	InitRand()
 	//print("\x1b[38;2;255;255;255m\n\x1b[1;1H")
 	_clear = make(map[string]func()) //Initialize funcs map
@@ -355,6 +356,11 @@ func exists( filename string ) (bool) {
 	return !errors.Is(err, os.ErrNotExist)
 }
 
+func dprint(stream *bufio.Writer, Type string, Text string, Info ...interface{}) {
+	fprintf(stream, "[%s]: %s\n", Type, spf(Text, Info...))
+	stream.Flush()
+}
+
 func panic( err error ) {
 	if ( err != nil ) {
 		dprint(stderr, "ERROR", "%v\n", err)
@@ -425,88 +431,6 @@ func HashInt(i int) uint32 {
 	h := fnv.New32a()
 	h.Write([]byte(sprintf("%d", i)))
 	return h.Sum32()
-}
-
-type HashMap struct {
-	length int
-	items []interface{}
-	hashes []int // before %len
-}
-
-func Hash( thing interface{} ) (int) {
-	var st string = sprintf("%v", thing)
-	for ;len(st) < 3;{
-		st+="0"
-	}
-	st+="\n"
-	return int(HashStr(st))
-}
-
-func MakeHashMap(keys []interface{}, results[]interface{}) (*HashMap) {
-	var kl = len(keys)
-	if ((kl) != len(results)) {
-		dprint(stderr, "ERROR", "[MakeHashMap] keys' len %d != results' len %d\n", kl, len(results))
-		exit(1)
-	}
-	var length = kl
-	_ = kl
-
-	// make Hash Array
-	var hashes = make([]int, length)
-	for i:=0;i<length;i++ {
-		hashes[i] = Hash(keys[i])
-	}
-
-	// make Ordered Items
-	var oi = make([]interface{}, length)
-	for i:=0;i<length;i++ {
-		oi[hashes[i]%length] = results[i]
-	}
-
-	//var hs HashMap = HashMap{length, oi, hashes}
-	return &HashMap{length, oi, hashes}
-}
-
-func dprint(stream *bufio.Writer, Type string, Text string, Info ...interface{}) {
-	if Type == "ERROR" {
-		Type = COLOR["red"]+"ERROR"+COLOR["nc"]
-	} // else if ... for other colors
-	fprintf(stream, spf("[%s]: %s", Type, spf(Text, Info...)))
-	stream.Flush()
-}
-
-// HS Any -> Any
-func HSGet( h *HashMap, key interface{} ) (interface{}) {
-	return h.items[Hash(key)%h.length]
-}
-
-// hash map (unsafe) add
-func HSUAdd( h *HashMap, key interface{}, result interface{}) {
-	h.length++
-	h.hashes = append(h.hashes, (Hash(key)))
-	h.items = append(h.items, result)
-	//return h
-}
-
-// hash map add
-func HSAdd( h *HashMap, key interface{}, result interface{}) {
-	var nh = Hash(key)
-	var nhl = nh%(h.length+1)
-	for i:=0;i<h.length;i++ {
-		if (h.hashes[i]%(h.length+1) == nhl) {
-			// TODO: stop this shit
-			dprint(stderr, "ERROR", "hash cruching: [%v->]%d/%d(=%d) == [%v->]%d/%d(=%d)!\n",
-			h.items[i],
-			// old hash
-			h.hashes[i], h.length+1,	h.hashes[i]%(h.length+1),
-			// added hash
-			key,
-			nh,			 h.length+1,	nhl)
-		}
-	}
-	h.length++
-	h.hashes = append(h.hashes, nh)
-	h.items = append(h.items, result)
 }
 
 func PS( thing ...interface{} ) { // print single
