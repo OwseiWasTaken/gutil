@@ -188,14 +188,20 @@ func rboolin(in int) (bool) {
 	return rand.Intn(in+1)==1
 }
 
-func oldinput() (string) {
+func oldinput(prompt string) (string) {
 	var b = ""
+	print(prompt)
 	var i = make([]byte, 1)
 	for{
 		os.Stdin.Read(i)
-		i[0]++
-		if i[0] == 11{break}
-		b+=string(i[0]-1)
+		stdout.Write(i)
+		stdout.Flush()
+		if i[0] == 10{break}
+		if i[0] == 127{
+			b = b[:len(b)-1]
+			stdout.WriteString("\b \b\b")
+		}
+		b+=string(i[0])
 		i = []byte{0}
 	}
 	return b
@@ -258,7 +264,7 @@ func ReverseString( str string ) (string) {
 		ret[i] = now[j]
 		j++
 	}
-	return join(ret, "")
+	return strings.Join(ret, "")
 }
 
 var _clear map[string]func() //create a map for storing clear funcs
@@ -412,10 +418,10 @@ func pop(xs []interface{}, i int) (interface{}, []interface{}) {
 	return y, ys
 }
 
-func input(text string) (string) {
+func input(prompt string) (string) {
 	var ipt string
 	var err error
-	print(text)
+	print(prompt)
 	ipt, err = stdin.ReadString('\n')
 	panic(err)
 	return ipt[:len(ipt)-1]
@@ -533,6 +539,16 @@ func assert(thing bool, message string) {
 	}
 }
 
+func GetInt(prompt string) (int) {
+	in := oldinput(prompt)
+	i, err := strconv.Atoi(in)
+	for ;err != nil; {
+		in = oldinput(prompt)
+		i, err = strconv.Atoi(in)
+	}
+	return i
+}
+
 //dodef
 var (
 	stdout *bufio.Writer = bufio.NewWriter(os.Stdout)
@@ -546,13 +562,9 @@ var (
 	sprintf = fmt.Sprintf
 	spf = fmt.Sprintf
 	fprintf = fmt.Fprintf
-	join = strings.Join
-	split = strings.Split
 	fmake = os.Create
 	IsUpper = unicode.IsUpper
-	fwriter = bufio.NewWriter
-	freader = bufio.NewReader
-)
+);
 
 //const def
 const (
