@@ -18,7 +18,6 @@ import (
 	"runtime"
 	"errors"
 	"io/fs"
-	"unicode"
 	//"github.com/eiannone/keyboard"
 )
 
@@ -549,6 +548,45 @@ func GetInt(prompt string) (int) {
 	return i
 }
 
+type Log struct {
+	filename string
+	fd *FILE
+	out writer
+	lenght int
+	autosave bool
+}
+
+func MakeLog(filename string) (Log) {
+	var f, err = fmake(filename)
+	panic(err)
+	return Log{filename, f, bufio.NewWriter(f), 0, true}
+}
+
+func (l Log) PS ( thing ...interface{} ) {
+	fprintf(l.out, "%v\n", thing)
+	if l.autosave {
+		l.Save()
+	}
+}
+
+func (l Log) write ( thing string ) {
+	fprintf(l.out, thing)
+	if l.autosave {
+		l.Save()
+	}
+}
+
+func (l Log) Save () {
+	l.out.Flush()
+}
+
+func (l Log) End () {
+	l.out.Flush()
+	l.fd.Close()
+}
+
+
+
 //dodef
 var (
 	stdout *bufio.Writer = bufio.NewWriter(os.Stdout)
@@ -563,7 +601,6 @@ var (
 	spf = fmt.Sprintf
 	fprintf = fmt.Fprintf
 	fmake = os.Create
-	IsUpper = unicode.IsUpper
 );
 
 //const def
@@ -588,7 +625,6 @@ const (
 	// file nums
 	F_append = os.O_APPEND
 	F_WR = os.O_WRONLY
-
 )
 
 //typedef
