@@ -528,13 +528,13 @@ func bkcolor(br,bg,bb interface{}) (string) {
 	return spf("\x1b[48;2;%v;%v;%vm", br,bg,bb)
 }
 
-func kill(message string) () {
+func die(message string) () {
 	panic(errors.New(message))
 }
 
 func assert(thing bool, message string) {
 	if !thing {
-		kill(message)
+		die(message)
 	}
 }
 
