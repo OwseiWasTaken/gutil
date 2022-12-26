@@ -61,18 +61,14 @@ func get( gts string ) (_s_get) {
 	}
 }
 
-var stringType reflect.Type = typeof("")
-var intType reflect.Type = typeof(2)
-var boolType reflect.Type = typeof(true)
-var floatType reflect.Type = typeof(0.1)
 func Repr( v interface{} ) (string) {
 	var vtype reflect.Type = typeof(v)
 	var types map[reflect.Type]string = map[reflect.Type]string {}
-	types[stringType] = "S["
-	types[intType] = "I["
-	types[boolType] = "B["
-	types[floatType] = "F["
-	return fmt.Sprintf("%s%v%s", types[vtype], v, "]")
+	types[StringType] = "S["
+	types[IntType] = "I["
+	types[BoolType] = "B["
+	types[FloatType] = "F["
+	return fmt.Sprintf("%s%v]", types[vtype], v)
 }
 
 func typeof( v interface{} ) (reflect.Type) {
@@ -438,7 +434,7 @@ func HashInt(i int) uint32 {
 	return h.Sum32()
 }
 
-func PS( thing ...interface{} ) { // print single
+func PS( thing ...interface{} ) { // print simple
 	printf("%v\n", thing)
 }
 
@@ -471,9 +467,10 @@ func LsSumSize( dr string ) (int64) {
 	var dir []fs.FileInfo = _ls(dr)
 	var buff int64 = 0
 	for i:=0;i<len(dir);i++ {
-		buff += dir[i].Size()
 		if (dir[i].IsDir()){
 			buff+=LsSumSize(dr+(dir[i].Name())+"/")
+		} else {
+			buff += dir[i].Size()
 		}
 	}
 	return buff
@@ -510,6 +507,7 @@ func LsSumSizef( dr string ) ( string ) {
 
 func ls(dr string) ([]string) {
 	var dir []fs.FileInfo = _ls(dr)
+	// make the array, append is cringe
 	var buff = make([]string, len(dir))
 	for i:=0;i<len(dir);i++ {
 		buff[i] = dir[i].Name()
@@ -533,9 +531,7 @@ func die(message string) () {
 }
 
 func assert(thing bool, message string) {
-	if !thing {
-		die(message)
-	}
+	if !thing { die(message) }
 }
 
 func GetInt(prompt string) (int) {
@@ -585,8 +581,6 @@ func (l Log) End () {
 	l.fd.Close()
 }
 
-
-
 //dodef
 var (
 	stdout *bufio.Writer = bufio.NewWriter(os.Stdout)
@@ -601,6 +595,10 @@ var (
 	spf = fmt.Sprintf
 	fprintf = fmt.Fprintf
 	fmake = os.Create
+	StringType reflect.Type = typeof("")
+	IntType reflect.Type = typeof(2)
+	BoolType reflect.Type = typeof(true)
+	FloatType reflect.Type = typeof(0.1)
 );
 
 //const def
