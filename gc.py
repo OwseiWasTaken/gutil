@@ -133,19 +133,26 @@ def DoFileMain(filename, config, BuildArgs, RunArgs) -> int:
 	# build/run cfile
 	if not nb:
 		if run:
-			ra = ''.join(RunArgs)+' '
+			ra = ' '.join(RunArgs)+' '
 			if cmd(f"go run {cname} {ra}"):
 				fprintf(stderr, "could not run file {s}\n", filename)
 		else:
-			ba = ' '+''.join(DoAll(lambda x: " "+x, BuildArgs))+' '
+			ba = ' '+' '.join(map(lambda x: " "+x, BuildArgs))+' '
 			if _:=cmd(f"go build {cname}{ba}"):
 				fprintf(stderr, "could not compile file {s}\n", filename)
 				if not kc:
 					cmd(f"rm {cname}")
 				return 1
-			cmd(f"mv c{mvflname[:-3]} {mvflname[:-3]}") # renames compiled c{file} -> {file}
+			if exists(f"c{mvflname[:-3]}"):
+				cmd(f"mv c{mvflname[:-3]} {mvflname[:-3]}") # renames compiled c{file} -> {file}
+			else:
+				assert exists(f"c{mvflname[:-3]}.exe")
+				cmd(f"mv c{mvflname[:-3]}.exe {mvflname[:-3]}.exe") # renames compiled c{file} -> {file}
 			if not _ and bnr: # build and run
-				cmd(f"./{mvflname[:-3]}")
+				if exists(f"c{mvflname[:-3]}"):
+					cmd(f"./{mvflname[:-3]}")
+				else:
+					assert exists(f"{mvflname[:-3]}.exe")
 		if not kc:
 			cmd(f"rm {cname}")
 	return 0
