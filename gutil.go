@@ -1,4 +1,4 @@
-package gutil
+package main
 
 // RUN InitGu!
 
@@ -44,7 +44,7 @@ type _s_get struct {
 	List []string
 }
 
-func get( gts string ) (_s_get) {
+func Get( gts string ) (_s_get) {
 	_list, _exists := args[gts]
 	var _ll int = len(_list)
 	var _first string = ""
@@ -287,11 +287,11 @@ func clear() {
 		value()
 	} else {
 		printf("Your platform [%s] is unsupported! I can't clear terminal screen :(", runtime.GOOS)
-		exit(1)
+		Exit(1)
 	}
 }
 
-func exit( ecode int ) {
+func Exit( ecode int ) {
 	stdout.Flush()
 	stderr.Flush()
 	os.Exit(ecode)
@@ -365,7 +365,7 @@ func dprint(stream *bufio.Writer, Type string, Text string, Info ...interface{})
 func panic( err error ) {
 	if ( err != nil ) {
 		dprint(stderr, "ERROR", "%v\n", err)
-		exit(1)
+		Exit(1)
 	}
 }
 
@@ -407,13 +407,13 @@ func DecompressByte( b byte ) ([8]bool) {
 	}
 }
 
-func pop(xs []interface{}, i int) (interface{}, []interface{}) {
+func Pop(xs []interface{}, i int) (interface{}, []interface{}) {
 	y := xs[i]
 	ys := append(xs[:i], xs[i+1:]...)
 	return y, ys
 }
 
-func input(prompt string) (string) {
+func Input(prompt string) (string) {
 	var ipt string
 	var err error
 	print(prompt)
@@ -436,6 +436,10 @@ func HashInt(i int) uint32 {
 
 func PS( thing ...interface{} ) { // print simple
 	printf("%v\n", thing)
+}
+
+func SP( thing ...interface{} ) (string) { // print simple
+	return sprintf("%v\n", thing)
 }
 
 func HideCursor() () {
@@ -505,7 +509,7 @@ func LsSumSizef( dr string ) ( string ) {
 	return _LsSumSizef(dr, 10)
 }
 
-func ls(dr string) ([]string) {
+func Ls(dr string) ([]string) {
 	var dir []fs.FileInfo = _ls(dr)
 	// make the array, append is cringe
 	var buff = make([]string, len(dir))
@@ -518,20 +522,28 @@ func ls(dr string) ([]string) {
 	return buff
 }
 
-func color(fr,fg,fb, br,bg,bb interface{}) (string) {
+func Color(fr,fg,fb, br,bg,bb interface{}) (string) {
 	return spf("\x1b[38;2;%v;%v;%v;48;2;%v;%v;%vm", fr,fg,fb, br,bg,bb)
 }
 
-func bkcolor(br,bg,bb interface{}) (string) {
+func Bkcolor(br,bg,bb interface{}) (string) {
 	return spf("\x1b[48;2;%v;%v;%vm", br,bg,bb)
 }
 
-func die(message string) () {
+func Die(message string) () {
 	panic(errors.New(message))
 }
 
-func assert(thing bool, message string) {
-	if !thing { die(message) }
+func CDie(message string) () {
+	clear()
+	stdout.Flush()
+	stderr.Flush()
+	pos(0,0)
+	panic(errors.New(message))
+}
+
+func Assert(thing bool, message string) {
+	if !thing { Die(message) }
 }
 
 func GetInt(prompt string) (int) {
@@ -547,7 +559,7 @@ func GetInt(prompt string) (int) {
 type Log struct {
 	filename string
 	fd *FILE
-	out writer
+	out Writer
 	lenght int
 	autosave bool
 }
@@ -627,5 +639,5 @@ const (
 
 //typedef
 type FILE = os.File
-type reader = *bufio.Reader
-type writer = *bufio.Writer
+type Reader = *bufio.Reader
+type Writer = *bufio.Writer
