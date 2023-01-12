@@ -1,4 +1,5 @@
-#! /usr/bin/python3.10
+#! /usr/local/bin/python3.11
+# depreacted
 #imports
 from util import *
 from os.path import realpath, abspath
@@ -82,14 +83,15 @@ def DoFileMain(filename, config, BuildArgs, RunArgs) -> int:
 
 	# usable input chek
 	if not exists(filename):
-		fprintf(stderr, "file \"{s}\" doesn't exist!\n", filename)
+		fdprint(ThisFileName, "ERROR", f"file \"{filename}\" doesn't exist!\n")
 		return 2
 	elif not isfile(filename):
 		if "main.go" in ls(filename):
 			cd(filename)
 			filename="./main.go"
 		else:
-			fprintf(stderr, "can't find main.go in {s}\n", filename)
+			fdprint(ThisFileName, "ERROR", f"can't find main.go in {filename}\n")
+			#fprintf(stderr, "can't find main.go in {s}\n", filename)
 			return 3
 
 	now = pwd()
@@ -138,7 +140,7 @@ def DoFileMain(filename, config, BuildArgs, RunArgs) -> int:
 				fprintf(stderr, "could not run file {s}\n", filename)
 		else:
 			ba = ' '+' '.join(map(lambda x: " "+x, BuildArgs))+' '
-			if _:=cmd(f"go build {cname}{ba}"):
+			if _:=cmd(f"go build {cname}{ba}").returncode:
 				fprintf(stderr, "could not compile file {s}\n", filename)
 				if not kc:
 					cmd(f"rm {cname}")
