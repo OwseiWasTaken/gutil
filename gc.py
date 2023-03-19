@@ -1,5 +1,4 @@
-#! /usr/local/bin/python3.11
-# depreacted
+#! /bin/python3.10
 #imports
 from util import *
 from os.path import realpath, abspath
@@ -19,14 +18,14 @@ def Main() -> int:
 	})
 
 	paths = UseXmp(confile)["paths"]
-	if get("-l").exists:
+	if get("-l").exists: # link with
 		ll = get("-l").list
 		np = {}
 		for l in ll:
 			if ':' in l:
 				np[l.split(':')[0]] = l.split(':')[1]
 			else:
-				fprintf(stderr, "-l error, can't find ':' division on `{s}`", l)
+				fprintf(stderr, "-l error, can't find ':' division on `{s}`\n", l)
 				exit(1)
 		paths = paths | np
 
