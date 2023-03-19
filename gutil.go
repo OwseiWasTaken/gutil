@@ -1,4 +1,4 @@
-package main
+package gutil
 
 // RUN InitGu!
 
@@ -591,6 +591,25 @@ func (l Log) Save () {
 func (l Log) End () {
 	l.out.Flush()
 	l.fd.Close()
+}
+
+type V1 = int
+
+type V3 struct {
+	x, y, z V1
+}
+
+func (V V3) V1Mul(v1 V1) (V3) {
+	return V3{
+		V.x * v1,
+		V.y * v1,
+		V.x * v1,
+	}
+}
+
+// T.x /V3/ * V1 /int/
+type Transform struct {
+	x, y, z V3
 }
 
 //dodef
